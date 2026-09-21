@@ -1,0 +1,20 @@
+flowchart TB
+    Owner["Workspace Owner/Admin\n(sets up & manages workspace)"]
+    Member["Member\n(team user)"]
+    Guest["Guest\n(no account, joins via link)"]
+
+    WiChat(["WiChat\nSelf-hosted, plugin-based\nteam communication platform"])
+
+    Google["Google OAuth\n(external identity provider)"]
+    LiveKitExt["LiveKit\n(self-hosted voice/video SFU,\nrun alongside WiChat)"]
+    SMTP["SMTP Server\n(email for password reset)"]
+    Plugins["Installed Plugins\n(Task Board, Whiteboard,\nVirtual Office, etc.)"]
+
+    Owner -->|manages workspace,\ninstalls plugins| WiChat
+    Member -->|chats, calls, collaborates| WiChat
+    Guest -->|joins a channel via link| WiChat
+
+    WiChat -->|authenticates via| Google
+    WiChat -->|delegates voice/video to| LiveKitExt
+    WiChat -->|sends password-reset email via| SMTP
+    WiChat -->|loads UI & delegates features to| Plugins

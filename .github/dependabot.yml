@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Enable when manifests exist:
+  # - package-ecosystem: gomod
+  #   directory: /services/core
+  # - package-ecosystem: npm
+  #   directory: /apps/web

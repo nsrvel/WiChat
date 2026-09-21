@@ -1,0 +1,105 @@
+flowchart TB
+    subgraph Client["Client Layer"]
+        Web["Web & iOS (Next.js PWA)\nsingle domain + workspace picker"]
+        Desktop["Desktop (Electron)\nwraps web core, auto-update later"]
+        Mobile["Android (React Native APK)\nsideload, FCM push, ConnectionService"]
+    end
+
+    subgraph Gesture["Gesture/Camera AI (client-side)"]
+        MP["MediaPipe (embedded)\nopt-in, default OFF on mobile"]
+    end
+
+    subgraph Monolith["Core Backend — 1 Go binary (Modular Monolith)"]
+        direction TB
+        Gateway["API Gateway (Gin/Fiber)\nrate limiting, presigned URL issuer,\nLiveKit webhook receiver, data export job trigger"]
+        Auth["Auth module\nregistration modes, Google OAuth,\nguest session, first-run admin setup"]
+        ChatSvc["Chat module (WebSocket)\nunified channel, threads, reactions,\nread receipts, catch-up sync"]
+        WorkspaceSvc["Workspace module\nmulti-workspace, roles, private channels"]
+        PresenceSvc["Presence module"]
+        NotifSvc["Notification module\n@mention -> Kafka, Web Push/FCM"]
+        PluginMgr["Plugin Manager module\nregistry + gRPC contracts"]
+        SearchSvc["Search module"]
+        AuditSvc["Audit Log module"]
+        MediaControl["LiveKit Controller\nroom tokens, lifecycle webhooks"]
+
+        Gateway --> Auth
+        Gateway --> WorkspaceSvc
+        Gateway --> PresenceSvc
+        Gateway --> PluginMgr
+        Gateway --> ChatSvc
+        Gateway --> SearchSvc
+        Gateway --> MediaControl
+        ChatSvc --> NotifSvc
+    end
+
+    subgraph EventBackbone["Event Backbone"]
+        Kafka["Kafka\nchat-events / audit-events /\nnotif-events / analytics-events"]
+    end
+
+    subgraph Data["Data Layer (TLS in-transit)"]
+        Postgres[("PostgreSQL + JSONB\nusers, workspaces, channels,\nmessages, audit logs, emoji")]
+        Redis[("Redis\npresence, guest TTL, typing,\nWS fanout, pub-sub")]
+        ES[("Elasticsearch\nmessage search index")]
+        MinIO[("MinIO (S3-compatible)\nfiles, avatars, soundboard\npresigned PUT/GET")]
+    end
+
+    subgraph Backup["Backup"]
+        BackupJob["pg_dump + WAL archive (daily cron)"]
+    end
+
+    subgraph Obs["Observability"]
+        Grafana["Grafana + Loki"]
+    end
+
+    subgraph Testing["Testing (CI)"]
+        Unit["Unit: Go testing + testify (~90%)"]
+        Integ["Integration: testcontainers"]
+        E2E["E2E: Playwright (critical paths)"]
+    end
+
+    subgraph External["Separate processes (independent lifecycle)"]
+        LiveKit["LiveKit Server (SFU)\nself-hosted, Apache 2.0\n1 well-provisioned node (4-8 vCPU)\nfits 2-500 people/workspace\nAEC/noise suppression via libwebrtc (free)\nDTLN/RNNoise plugin optional (Krisp = paid/cloud, excluded)"]
+        Registry["Plugin Registry\nmanifest: name, version, permissions, bundle URL"]
+        P1["Task Board Plugin - gRPC"]
+        P2["Whiteboard Plugin - gRPC"]
+        P3["Virtual Office Plugin - gRPC\n(spatial map, proximity voice, private zones)\noptional / nice-to-have"]
+        P4["Interactive Activities Plugin - gRPC"]
+        P5["Analytics Plugin (future)\nconsumes Kafka feed"]
+        P6["AI/ML Service (future, Python)\nWhisper transcription etc - gRPC"]
+    end
+
+    Web --> MP
+    MP -->|processed video track| LiveKit
+    Web -->|REST/WS, TLS| Gateway
+    Web -->|connect/publish/subscribe| LiveKit
+    Web -->|browse/install| Registry
+    Web -.direct upload (presigned).-> MinIO
+    Desktop -.wraps.-> Web
+    Mobile -->|REST/WS, TLS| Gateway
+    Mobile --> LiveKit
+
+    Auth --> Postgres
+    Auth -->|guest session TTL| Redis
+    ChatSvc --> Redis
+    ChatSvc --> Postgres
+    ChatSvc -->|emit event| Kafka
+    Kafka --> SearchSvc --> ES
+    Kafka --> AuditSvc --> Postgres
+    WorkspaceSvc --> Postgres
+    PresenceSvc --> Redis
+    PluginMgr --> Registry
+    PluginMgr <-->|gRPC, dynamic install| P1
+    PluginMgr <-->|gRPC| P2
+    PluginMgr <-->|gRPC| P3
+    PluginMgr <-->|gRPC| P4
+    PluginMgr -.gRPC (future).-> P6
+    Kafka -.future.-> P5
+    Gateway -.issues presigned URL.-> MinIO
+    Gateway -.generates export archive.-> MinIO
+    Postgres -.read for export.-> Gateway
+    Postgres -.scheduled.-> BackupJob
+
+    LiveKit --> Redis
+    LiveKit -->|webhook: room lifecycle| MediaControl
+    MediaControl --> LiveKit
+    Monolith -.logs/metrics.-> Grafana

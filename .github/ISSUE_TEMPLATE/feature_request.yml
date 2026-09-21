@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose a change aligned with WiChat scope
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check (see system design non-goals)
+      options:
+        - label: Fits self-hosted 2–500 users per workspace without federation
+        - label: Not requesting multi-tenant public SaaS or E2E encryption for v1
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

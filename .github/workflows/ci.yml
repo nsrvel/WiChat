@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository-baseline:
+    name: Repository baseline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Required project files
+        run: |
+          test -f README.md
+          test -f LICENSE
+          test -f docs/architecture/wichat-system-design.md
+          test -f SECURITY.md
+          test -f CONTRIBUTING.md
+
+      - name: No accidental env files
+        run: |
+          if git ls-files | grep -E '^\.env$|^\.env\.' | grep -v '.env.example'; then
+            echo "Refusing to ship .env secrets"
+            exit 1
+          fi
+
+  # Phase 0+: enable when Go module exists
+  # go-test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-go@v5
+  #       with:
+  #         go-version-file: go.mod
+  #     - run: go test ./...

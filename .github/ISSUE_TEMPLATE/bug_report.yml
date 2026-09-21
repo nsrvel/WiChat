@@ -1,0 +1,41 @@
+name: Bug report
+description: Something broken in WiChat
+labels: ["bug", "triage"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Expected vs actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Core backend
+        - Web client
+        - Desktop (Electron)
+        - Android
+        - Plugin
+        - Deployment / docker
+        - Documentation
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: e.g. v0.1.0 or abc1234
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Redact tokens and PII
