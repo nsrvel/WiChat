@@ -20,4 +20,4 @@ Go monorepo microservices + LiveKit + Postgres/Redis/ES/MinIO/Kafka; Next.js web
 
 ## Repo layout target
 
-`apps/`, `services/`, `plugins/`, `deploy/`, `docs/` — extend existing patterns before inventing new top-level folders.
+`backend/`, `frontend/`, `deploy/`, `docs/` — do not add parallel top-level app folders.

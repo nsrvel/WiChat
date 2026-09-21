@@ -44,7 +44,7 @@ The project originated from a real gap: an internal team found existing tools ei
 
 See [`architecture-context.mermaid`](architecture-context.mermaid) for the C4 Context-level view (users, WiChat, external systems) and [`architecture-container.mermaid`](architecture-container.mermaid) for the Container-level view (internal services, data stores, plugins). Summary of major building blocks:
 
-- **Core Backend**: **monorepo microservices** — multiple Go binaries under `services/` (see §5.1), not one monolith process
+- **Core Backend**: **monorepo microservices** — multiple Go binaries under `backend/services/` (see §5.1)
 - **Media Layer**: LiveKit (self-hosted SFU) as a genuinely separate process
 - **Plugin Layer**: separate processes per plugin, communicating with platform/plugin services via gRPC; frontend plugin UI via iframe/WebView + postMessage
 - **Data Layer**: PostgreSQL (primary store), Redis (ephemeral/real-time), Elasticsearch (search), MinIO (file storage)
@@ -53,32 +53,31 @@ See [`architecture-context.mermaid`](architecture-context.mermaid) for the C4 Co
 
 ### 5.1 Monorepo microservices (core backend)
 
-**Decision:** Core runs as **separate deployable Go services** in one Git monorepo (`services/<name>/`), talking **gRPC** internally and **Kafka** for async work. LiveKit and each plugin remain separate processes as before.
+**Decision:** Core runs as **separate deployable Go services** in `backend/services/<name>/` (workspace `backend/go.work`), talking **gRPC** internally and **Kafka** for async work.
 
 **Why not one binary:** Keeps each runtime small and lets teams evolve/chat scale/realtime paths independently without one growing “god binary.”
 
 **Tradeoff (explicit):** Self-host runs **more containers** than a monolith — mitigated by a single `docker compose` stack and shared infra (one Postgres cluster, one Redis, one Kafka).
 
-**Service set (v1 — do not splinter further without cause):**
+**Service set (v1 — nine services under `backend/services/`):**
 
 | Service | Responsibility |
 |---------|----------------|
-| **gateway** | Public HTTP `/api/v1`, rate limits, JWT validation (via identity), routes to gRPC backends, presigned URL issuance, export job trigger |
-| **identity** | Auth, OAuth, email/password, sessions, refresh rotation, first-run admin, guest tokens (when enabled) |
-| **platform** | Workspaces, membership, RBAC, channels/categories/DM metadata, workspace settings, lobby/onboarding |
-| **chat** | Messages, threads, reactions, pins, typing, read receipts, WebSocket fanout, chat-side moderation signals |
-| **presence** | User status + activity status (e.g. in-call); consumes media/chat events |
-| **media** | LiveKit room tokens, webhooks, call lifecycle |
-| **notify** | @mention and notification dispatch (Kafka in → FCM/Web Push out) |
-| **search** | Search query API + Elasticsearch indexing (Kafka consumer) |
-| **audit** | Audit log writer (Kafka consumer → Postgres) |
-| **plugins** | Plugin registry, install lifecycle, gRPC to plugin processes |
+| **gateway** | Public HTTP `/api/v1`, rate limits, JWT validation (via ms-auth), routes to gRPC backends, presigned URL issuance, export job trigger |
+| **ms-auth** | Auth, OAuth, email/password, sessions, refresh rotation, first-run admin, guest tokens (when enabled) |
+| **ms-user** | Workspaces, membership, RBAC, channels/categories/DM metadata, workspace settings, lobby/onboarding, user profiles |
+| **ms-chat** | Messages, threads, reactions, pins, typing, read receipts, WebSocket fanout, presence/activity status, chat-side moderation signals |
+| **ms-media** | LiveKit room tokens, webhooks, call lifecycle |
+| **ms-plugin** | Plugin registry, install lifecycle, gRPC to plugin processes in `backend/plugins/` |
+| **ms-notify** | @mention and notification dispatch (Kafka in → FCM/Web Push out) |
+| **ms-search** | Search query API + Elasticsearch indexing (Kafka consumer) |
+| **ms-audit** | Audit log writer (Kafka consumer → Postgres) |
 
 **Data ownership:** One **PostgreSQL cluster** at launch; each service owns its **tables** (no cross-service SQL joins — use IDs + gRPC/events). Shared DB is a pragmatic compromise; split databases only if ops requires it later.
 
-**Shared code:** `pkg/` for protobuf contracts, shared error types, and small utilities only — **not** shared domain logic (avoid distributed monolith).
+**Shared code:** `backend/pkg/` for protobuf contracts, shared error types, and small utilities only — **not** shared domain logic (avoid distributed monolith).
 
-**Clients:** Talk only to **gateway** (REST) and **chat** (WebSocket upgrade via gateway reverse proxy or dedicated WS URL documented in deploy config).
+**Clients:** live under `frontend/` (web first). Talk only to **gateway** (REST) and **ms-chat** (WebSocket via gateway or documented WS URL).
 
 ## 6. Core Domains
 

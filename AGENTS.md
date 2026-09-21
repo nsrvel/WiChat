@@ -10,7 +10,7 @@ WiChat is a **self-hosted**, **AGPL-3.0** team communication platform with a **p
 
 ## Architecture constraints (do not drift)
 
-- Core backend: **Go monorepo microservices** under `services/` (gRPC + Kafka between services; not one monolith binary).
+- Core backend: **Go monorepo microservices** under `backend/services/` (gRPC + Kafka between services).
 - Separate processes: **LiveKit**, **plugins (gRPC)**, not core domains.
 - Data: PostgreSQL, Redis, Elasticsearch, MinIO, Kafka.
 - Clients: Next.js (web + iOS PWA), Electron, React Native (Android).
@@ -19,12 +19,10 @@ WiChat is a **self-hosted**, **AGPL-3.0** team communication platform with a **p
 ## Repository layout (target)
 
 ```
-apps/          # web, desktop, mobile clients
-services/      # Go microservices (gateway, identity, platform, chat, …)
-pkg/           # protobuf + shared types only
-plugins/       # optional plugin services + bundles
+backend/       # Go: services/, pkg/, plugins/ (plugin servers)
+frontend/      # Web (Next.js first); desktop/mobile later
 deploy/        # docker compose, env templates
-docs/          # architecture & ops (system design lives here)
+docs/          # architecture & ops
 ```
 
 Phases in system design §15 — implement in order unless explicitly reprioritized.
