@@ -1,10 +1,19 @@
-# Deployment (Phase 0+)
+# Deployment
 
-Docker Compose stack and environment templates will live here.
+## Local infrastructure (Postgres + Redis)
 
-Until Phase 0 implementation:
+From repo root:
 
-- Instance config: env / config file (DB, secrets, public URL)
-- Workspace config: stored in PostgreSQL (admin UI)
+```bash
+docker compose -f deploy/docker-compose.yml up -d
+```
+
+Stop:
+
+```bash
+docker compose -f deploy/docker-compose.yml down
+```
+
+Instance env vars: see `.env.example` at repo root. WiChat services are added to compose as each slice lands.
 
 See `docs/architecture/wichat-system-design.md` §7 and §11.

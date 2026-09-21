@@ -18,7 +18,7 @@ Target scale: **2–500 people per workspace** on a single instance (`docker com
 
 ## Architecture (short)
 
-- **Core:** Go modular monolith (auth, workspace, chat/WebSocket, presence, notifications, plugins, search, audit)
+- **Core:** Go **monorepo microservices** (gateway, identity, platform, chat, …) — see system design §5.1
 - **Realtime media:** [LiveKit](https://livekit.io/) (self-hosted SFU)
 - **Data:** PostgreSQL, Redis, Elasticsearch, MinIO, Kafka
 - **Clients:** Next.js (web + iOS PWA), Electron (desktop), React Native (Android APK)

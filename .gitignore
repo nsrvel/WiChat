@@ -1,3 +1,6 @@
+# Local reference clones (not part of WiChat)
+references/
+
 # Secrets & local config
 .env
 .env.*

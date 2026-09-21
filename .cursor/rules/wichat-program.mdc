@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Program control
 
-WiChat is a **major product** (commercial open core). Execute like a shipped platform, not a demo repo.
+WiChat is a **major product** — build and spec it seriously, not as a throwaway experiment.
 
 ## Workflow
 
@@ -13,13 +13,20 @@ WiChat is a **major product** (commercial open core). Execute like a shipped pla
 - **`main`** updates only when cutting a stable release line.
 - **Spec wins:** `docs/architecture/wichat-system-design.md` unless Garam explicitly overrides in chat.
 
+## Focus
+
+- **Application first:** clients, core domains, data paths, realtime, plugins — not business model, pricing, or GTM in agent guidance.
+- Do not ask clarifying questionnaires; infer from the system design and state assumptions briefly when needed.
+
 ## Sequencing
 
-- Follow roadmap phases (§15). Do not pull in deferred non-goals (federation, E2E v1, public marketplace, multi-tenant SaaS).
-- One phase exit criteria met before expanding scope (e.g. no LiveKit/Kafka/ES until core chat path exists in compose).
-- Recommend the **next** step after each milestone; block scope creep with a short reason.
+- **Micro-steps only:** one small, reviewable slice at a time. Do not sell distant milestones unless Garam asks.
+- SDD phases (§15) are a **map**, not a sprint plan — translate into the **next single step** after each merge.
+- Do not pull in deferred non-goals (federation, E2E v1, public marketplace, multi-tenant SaaS).
+- **Vertical slices:** ship one feature end-to-end (min BE + FE + DB for that feature), not full backend then full frontend.
+- After each slice lands, state only **one** recommended follow-up.
 
 ## Communication
 
-- Direct and honest: weak design, risky shortcut, or missing test — say so plainly.
-- No empty praise. Credit only what is actually solid.
+- Direct and honest on product and technical choices.
+- Pace: **pelan, bertahap**.

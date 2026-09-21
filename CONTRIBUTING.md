@@ -19,12 +19,7 @@ Documented as each phase lands (Phase 0: `docker compose`, Go toolchain, Node fo
 
 ## Code standards
 
-Follow `.cursor/rules/` (same standards for humans and agents). Highlights:
-
-- **Go (core):** see `go-core.mdc` — ~90% unit coverage goal on domain packages.
-- **TypeScript (clients):** see `typescript-clients.mdc`.
-- **API / WS:** see `api-realtime.mdc` and system design §13.
-- **Security:** see `security-trust.mdc`.
+Follow [system design](docs/architecture/wichat-system-design.md) and `.cursor/rules/wichat-*.mdc`. Narrower Cursor rules are added only when matching code lands (Go services, web app, etc.).
 
 ## Pull requests
 

@@ -32,12 +32,14 @@ jobs:
             exit 1
           fi
 
-  # Phase 0+: enable when Go module exists
-  # go-test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-go@v5
-  #       with:
-  #         go-version-file: go.mod
-  #     - run: go test ./...
+  go-test:
+    name: Go tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - name: Test gateway
+        run: go test ./...
+        working-directory: services/gateway

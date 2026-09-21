@@ -4,13 +4,13 @@ Guidance for humans and coding agents working in this repository.
 
 ## Product
 
-WiChat is a **self-hosted**, **AGPL-3.0** team communication platform with a **plugin architecture** — a **major product** (commercial open core). Operability, security, and deployability are part of the deliverable, not stretch goals.
+WiChat is a **self-hosted**, **AGPL-3.0** team communication platform with a **plugin architecture** — a **major product** built for real daily use. Operability, security, and deployability are part of the application, not optional polish.
 
 **Canonical spec:** [docs/architecture/wichat-system-design.md](docs/architecture/wichat-system-design.md)
 
 ## Architecture constraints (do not drift)
 
-- Core backend: **one Go modular monolith** (not microservices at launch).
+- Core backend: **Go monorepo microservices** under `services/` (gRPC + Kafka between services; not one monolith binary).
 - Separate processes: **LiveKit**, **plugins (gRPC)**, not core domains.
 - Data: PostgreSQL, Redis, Elasticsearch, MinIO, Kafka.
 - Clients: Next.js (web + iOS PWA), Electron, React Native (Android).
@@ -20,7 +20,8 @@ WiChat is a **self-hosted**, **AGPL-3.0** team communication platform with a **p
 
 ```
 apps/          # web, desktop, mobile clients
-services/      # core Go binary
+services/      # Go microservices (gateway, identity, platform, chat, …)
+pkg/           # protobuf + shared types only
 plugins/       # optional plugin services + bundles
 deploy/        # docker compose, env templates
 docs/          # architecture & ops (system design lives here)
@@ -42,18 +43,11 @@ License: [LICENSE](LICENSE). Preserve AGPL headers on new source files. Do not a
 
 ## Cursor rules
 
-Project rules live in `.cursor/rules/`:
+Only **always-on** rules for now (keep context lean). Add file-specific `.mdc` rules when that code exists (Go, web, deploy, etc.).
 
 | Rule | Scope |
 |------|--------|
-| `wichat-program.mdc` | Always — sequencing, `release` branch, honest execution |
-| `wichat-core.mdc` | Always — architecture guardrails |
-| `go-core.mdc` | `services/**/*.go` |
-| `api-realtime.mdc` | HTTP/WS handlers |
-| `typescript-clients.mdc` | `apps/**/*.{ts,tsx}` |
-| `database.mdc` | Migrations & stores |
-| `security-trust.mdc` | Auth, middleware, deploy secrets |
-| `deploy-ops.mdc` | Compose, Dockerfiles |
-| `plugins.mdc` | `plugins/**` |
+| `wichat-program.mdc` | How we work: `release`, micro-steps, vertical slices |
+| `wichat-core.mdc` | Product + architecture guardrails |
 
-Humans should follow the same conventions in [CONTRIBUTING.md](CONTRIBUTING.md).
+Detail standards: [system design](docs/architecture/wichat-system-design.md) and this file until narrower rules return.

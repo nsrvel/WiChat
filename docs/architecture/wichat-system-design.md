@@ -44,15 +44,41 @@ The project originated from a real gap: an internal team found existing tools ei
 
 See [`architecture-context.mermaid`](architecture-context.mermaid) for the C4 Context-level view (users, WiChat, external systems) and [`architecture-container.mermaid`](architecture-container.mermaid) for the Container-level view (internal services, data stores, plugins). Summary of major building blocks:
 
-- **Core Backend**: single Go binary, modular monolith (Auth, Workspace, Chat, Presence, Notification, Plugin Manager, Search, Audit Log modules)
+- **Core Backend**: **monorepo microservices** — multiple Go binaries under `services/` (see §5.1), not one monolith process
 - **Media Layer**: LiveKit (self-hosted SFU) as a genuinely separate process
-- **Plugin Layer**: separate processes per plugin, communicating with core via gRPC; frontend plugin UI via iframe/WebView + postMessage
+- **Plugin Layer**: separate processes per plugin, communicating with platform/plugin services via gRPC; frontend plugin UI via iframe/WebView + postMessage
 - **Data Layer**: PostgreSQL (primary store), Redis (ephemeral/real-time), Elasticsearch (search), MinIO (file storage)
 - **Event Backbone**: Kafka for durable, replayable events (audit log, notifications, async search indexing, future analytics)
 - **Clients**: Next.js web app (also serves as iOS PWA), Electron desktop (wraps web core), React Native Android app
 
-### 5.1 Why Modular Monolith, not Microservices
-Core domain modules (Auth, Chat, Workspace, Presence) run as one Go binary with clean internal interfaces — not separate containers. This keeps self-hosted deployment simple (`docker compose up`) while preserving the option to peel out any module into a real microservice later if load demands it. Only Plugins and LiveKit are genuinely separate processes, because they have independent lifecycles (install/uninstall, third-party software).
+### 5.1 Monorepo microservices (core backend)
+
+**Decision:** Core runs as **separate deployable Go services** in one Git monorepo (`services/<name>/`), talking **gRPC** internally and **Kafka** for async work. LiveKit and each plugin remain separate processes as before.
+
+**Why not one binary:** Keeps each runtime small and lets teams evolve/chat scale/realtime paths independently without one growing “god binary.”
+
+**Tradeoff (explicit):** Self-host runs **more containers** than a monolith — mitigated by a single `docker compose` stack and shared infra (one Postgres cluster, one Redis, one Kafka).
+
+**Service set (v1 — do not splinter further without cause):**
+
+| Service | Responsibility |
+|---------|----------------|
+| **gateway** | Public HTTP `/api/v1`, rate limits, JWT validation (via identity), routes to gRPC backends, presigned URL issuance, export job trigger |
+| **identity** | Auth, OAuth, email/password, sessions, refresh rotation, first-run admin, guest tokens (when enabled) |
+| **platform** | Workspaces, membership, RBAC, channels/categories/DM metadata, workspace settings, lobby/onboarding |
+| **chat** | Messages, threads, reactions, pins, typing, read receipts, WebSocket fanout, chat-side moderation signals |
+| **presence** | User status + activity status (e.g. in-call); consumes media/chat events |
+| **media** | LiveKit room tokens, webhooks, call lifecycle |
+| **notify** | @mention and notification dispatch (Kafka in → FCM/Web Push out) |
+| **search** | Search query API + Elasticsearch indexing (Kafka consumer) |
+| **audit** | Audit log writer (Kafka consumer → Postgres) |
+| **plugins** | Plugin registry, install lifecycle, gRPC to plugin processes |
+
+**Data ownership:** One **PostgreSQL cluster** at launch; each service owns its **tables** (no cross-service SQL joins — use IDs + gRPC/events). Shared DB is a pragmatic compromise; split databases only if ops requires it later.
+
+**Shared code:** `pkg/` for protobuf contracts, shared error types, and small utilities only — **not** shared domain logic (avoid distributed monolith).
+
+**Clients:** Talk only to **gateway** (REST) and **chat** (WebSocket upgrade via gateway reverse proxy or dedicated WS URL documented in deploy config).
 
 ## 6. Core Domains
 
@@ -253,7 +279,7 @@ No offline-first support — mobile/web require an active connection. This is a 
 
 ## 14. Scale Assumptions
 
-Target: **2–500 people per workspace**. At this scale, a single instance each of PostgreSQL, Redis (optionally with Sentinel), Elasticsearch, and a single well-provisioned LiveKit node is sufficient — no sharding or clustering is required at launch. Module boundaries within the Go monolith are kept clean specifically so that any component can be extracted into an independent (and potentially polyglot — Python for ML, Node.js for JS-ecosystem plugins, Rust reserved for low-level media optimization if ever needed) service later without a redesign.
+Target: **2–500 people per workspace**. At this scale, a single instance each of PostgreSQL, Redis (optionally with Sentinel), Elasticsearch, and a single well-provisioned LiveKit node is sufficient — no sharding or clustering is required at launch. Core **microservices** scale horizontally only when metrics justify it (typically **chat** and **gateway** first); other services stay single-instance at this tier. Polyglot extraction (Python ML, etc.) remains possible via new services without redesigning domain boundaries.
 
 **Workspaces per instance**: no fixed cap is set for v1. The real constraint is total concurrent load — particularly voice/video (LiveKit) and active WebSocket connections — not raw workspace count; Postgres/Redis/Elasticsearch handle many workspaces comfortably before that becomes a bottleneck. Grafana observability (already planned) is the intended signal for when scaling action is needed, rather than a number decided upfront.
 
@@ -263,7 +289,7 @@ Target: **2–500 people per workspace**. At this scale, a single instance each 
 
 | Phase | Scope |
 |---|---|
-| 0 | Foundation: repo, docker-compose, Go skeleton, CI |
+| 0 | Foundation: repo, docker-compose, Go **service** skeletons + gRPC contracts, CI |
 | 1 | Auth & Workspace: registration modes, login, roles, multi-workspace |
 | 2 | Core Chat: channels, messaging, reactions, read receipts, sync |
 | 3 | Voice/Video: LiveKit integration, call controls |
