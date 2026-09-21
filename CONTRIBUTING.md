@@ -19,11 +19,12 @@ Documented as each phase lands (Phase 0: `docker compose`, Go toolchain, Node fo
 
 ## Code standards
 
-- **Go (core):** idiomatic Go, table-driven tests, `testify` where it helps readability; target ~90% unit coverage on core modules over time.
-- **TypeScript (clients):** strict typing, shadcn/Radix patterns for UI; match existing folder layout.
-- **API:** REST under `/api/v1/`; realtime via WebSocket; errors use standard HTTP status + human-readable message (see system design §13).
-- **i18n:** backend emits message keys; user-facing strings live in translation files.
-- **Security:** no secrets in git; rate limits at the gateway; validate at trust boundaries.
+Follow `.cursor/rules/` (same standards for humans and agents). Highlights:
+
+- **Go (core):** see `go-core.mdc` — ~90% unit coverage goal on domain packages.
+- **TypeScript (clients):** see `typescript-clients.mdc`.
+- **API / WS:** see `api-realtime.mdc` and system design §13.
+- **Security:** see `security-trust.mdc`.
 
 ## Pull requests
 

@@ -4,7 +4,7 @@ Guidance for humans and coding agents working in this repository.
 
 ## Product
 
-WiChat is a **self-hosted**, **AGPL-3.0** team communication platform with a **plugin architecture**. Commercial positioning: sell support, hosting, and proprietary plugins on top of the open core — quality and operability matter.
+WiChat is a **self-hosted**, **AGPL-3.0** team communication platform with a **plugin architecture** — a **major product** (commercial open core). Operability, security, and deployability are part of the deliverable, not stretch goals.
 
 **Canonical spec:** [docs/architecture/wichat-system-design.md](docs/architecture/wichat-system-design.md)
 
@@ -42,4 +42,18 @@ License: [LICENSE](LICENSE). Preserve AGPL headers on new source files. Do not a
 
 ## Cursor rules
 
-See `.cursor/rules/` for file-specific conventions as code lands.
+Project rules live in `.cursor/rules/`:
+
+| Rule | Scope |
+|------|--------|
+| `wichat-program.mdc` | Always — sequencing, `release` branch, honest execution |
+| `wichat-core.mdc` | Always — architecture guardrails |
+| `go-core.mdc` | `services/**/*.go` |
+| `api-realtime.mdc` | HTTP/WS handlers |
+| `typescript-clients.mdc` | `apps/**/*.{ts,tsx}` |
+| `database.mdc` | Migrations & stores |
+| `security-trust.mdc` | Auth, middleware, deploy secrets |
+| `deploy-ops.mdc` | Compose, Dockerfiles |
+| `plugins.mdc` | `plugins/**` |
+
+Humans should follow the same conventions in [CONTRIBUTING.md](CONTRIBUTING.md).

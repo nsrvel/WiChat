@@ -1,0 +1,30 @@
+---
+description: REST v1, WebSocket, and response conventions
+globs: services/**/{transport,http,api,ws}/**/*
+alwaysApply: false
+---
+
+# HTTP & realtime
+
+## REST
+
+- Base path: `/api/v1/`. URI versioning only; no breaking changes without a new version.
+- JSON request/response; timestamps UTC ISO-8601; IDs as UUIDv7 for messages where spec requires.
+
+## Errors
+
+- Standard HTTP status codes + human-readable `message` string (SDD §13). No ad-hoc error shape per endpoint.
+
+## Auth
+
+- JWT access (short) + refresh in httpOnly cookie, rotation on use.
+- Guest routes explicitly scoped; never reuse member middleware without guest checks.
+
+## WebSocket
+
+- Chat realtime on dedicated WS path; authenticate on connect.
+- Support client `sync:missed` / `last_synced_message_id` per SDD §6.4 — do not invent a parallel sync protocol.
+
+## i18n
+
+- Backend returns **message keys** for user-facing errors where applicable; not raw English prose in domain layer.

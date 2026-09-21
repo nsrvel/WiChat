@@ -1,0 +1,24 @@
+---
+description: Plugin processes, gRPC, and UI bundles
+globs: plugins/**/*
+alwaysApply: false
+---
+
+# Plugins
+
+## Process model
+
+- Separate binary/container per plugin; lifecycle independent of core monolith.
+- Core talks **gRPC** via Plugin Manager; frontend via **iframe/WebView + postMessage**.
+
+## Manifest
+
+- Declare name, version, permission scopes upfront; admin approval at install (SDD §6.8).
+- Register plugin permissions in catalog (`source_plugin_id`) — align with RBAC §6.2.
+
+## Boundaries
+
+- Workspace plugins: server + shared UI tab/sidebar.
+- Client-only plugins: no server trust; never send workspace secrets to personal plugins.
+
+Virtual Office and heavy spatial features stay plugins — core must run fine without them.

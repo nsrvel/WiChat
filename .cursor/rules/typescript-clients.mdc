@@ -1,0 +1,28 @@
+---
+description: Web, Electron shell, and React Native clients
+globs: apps/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Clients (`apps/`)
+
+## Shared rules
+
+- **TypeScript strict** — no `any` without a comment and ticket/issue link.
+- UI: **shadcn/ui + Radix**; dark mode day-one; use design tokens, not one-off hex in components.
+- i18n: **i18next**; no hardcoded user-visible strings in components.
+- Offline: **not offline-first** — show connection state; reconnect uses server sync (SDD §12.2), not a local message DB unless spec changes.
+
+## Web (`apps/web`)
+
+- Next.js App Router; keep server/client boundaries clear; secrets only on server.
+- PWA is the iOS path — test safe areas and Web Push constraints.
+
+## Desktop / mobile
+
+- Electron wraps web; avoid duplicating chat logic — share packages under `apps/` or `packages/` when introduced.
+- Android RN: FCM + native call hooks per SDD; sideload/APK flow, not store-assumed.
+
+## API usage
+
+- Call `/api/v1/` only; centralize fetch/WS client; handle 401 → refresh once, then logout.

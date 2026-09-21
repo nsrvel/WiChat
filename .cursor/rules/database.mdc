@@ -1,0 +1,29 @@
+---
+description: Postgres schema, migrations, RBAC data model
+globs: "{services/**/migrations/**,**/*.sql,services/**/store/**}"
+alwaysApply: false
+---
+
+# Database
+
+## Migrations
+
+- Tool: **golang-migrate**; sequential numbered files; never edit applied migrations — add a new one.
+- All timestamps **`TIMESTAMPTZ`**, stored UTC.
+
+## RBAC (foundation — do not simplify)
+
+- `roles`, `permissions` catalog, `user_workspace_roles` composite PK — per SDD §6.2.
+- Preset roles protected with `is_preset` / `is_system`; permission checks use `TEXT[]` + GIN as specified.
+
+## Messages & channels
+
+- Thread fields: `reply_to_message_id`, `root_message_id`, `reply_count`.
+- Soft vs hard delete rules per SDD §6.4; retention vs trash are **separate** settings (§7.1).
+
+## Queries
+
+- Parameterized only; no string-concat SQL.
+- Index for hot paths (workspace_id + channel_id + created_at for message history).
+
+When schema behavior changes, update `docs/architecture/wichat-system-design.md` in the same PR or follow-up immediately.
