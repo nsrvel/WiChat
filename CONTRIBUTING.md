@@ -2,6 +2,11 @@
 
 Thank you for helping make WiChat production-grade. This project is pre-implementation in places; when in doubt, follow [docs/architecture/wichat-system-design.md](docs/architecture/wichat-system-design.md).
 
+## Branches
+
+- **`release`** — active development (default branch; open PRs here).
+- **`main`** — stable line; updated from `release` when we cut a shipped version (not day-to-day commits).
+
 ## Before you start
 
 1. Open an issue for non-trivial work (feature, breaking change, new dependency).
