@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/wichat/wichat/backend/wi-shared/exception"
+	"github.com/wichat/wichat/backend/wi-shared/microservices"
 	"github.com/wichat/wichat/backend/wi-shared/response"
 	responsegrpc "github.com/wichat/wichat/backend/wi-shared/response/grpc"
 )
@@ -85,6 +86,30 @@ func clientCode(ex *exception.Error) exception.MessageCode {
 	}
 
 	return ex.Code
+}
+
+// WriteOutboundError maps downstream gRPC or transport errors to HTTP JSON.
+func WriteOutboundError(w http.ResponseWriter, r *http.Request, err error, opts ...WriteOption) {
+	if err == nil {
+		return
+	}
+
+	if _, ok := exception.As(err); ok {
+		WriteError(w, r, err, opts...)
+		return
+	}
+
+	if _, ok := responsegrpc.FromError(err); ok {
+		WriteErrorFromGRPC(w, r, err, opts...)
+		return
+	}
+
+	if microservices.IsOutboundUnavailable(err) {
+		WriteJSON(w, http.StatusServiceUnavailable, response.NewErrorEnvelope(string(exception.MsgUnavailable), nil))
+		return
+	}
+
+	WriteError(w, r, err, opts...)
 }
 
 // WriteErrorFromGRPC maps a downstream gRPC error to an HTTP JSON error response.

@@ -51,14 +51,14 @@ Client responses stay i18n codes only — see [error-handling.md](error-handling
 
 ## Gateway request ID
 
-`gateway/internal/middleware` sets `microservices.RequestIDHeader` (`X-Request-ID`) on every response and stores the value on `r.Context()` via `microservices.WithRequestID`.
+`api-gateway/internal/middleware` sets `microservices.RequestIDHeader` (`X-Request-ID`) on every response and stores the value on `r.Context()` via `microservices.WithRequestID`.
 
-Outbound gRPC from the gateway uses `wi-shared/microservices` client interceptors to send `x-request-id` metadata; ms-auth server interceptors read it back into context (recovery logs include `request_id` when present).
+Outbound gRPC from api-gateway uses `wi-shared/microservices` client interceptors to send `x-request-id` metadata; ms-auth server interceptors read it back into context (recovery logs include `request_id` when present).
 
 ## Follow-up
 
 - Add `request_id` to slog lines from context (automatic on every log call)
-- HTTP OpenTelemetry (`otelhttp`) on the gateway
+- HTTP OpenTelemetry (`otelhttp`) on api-gateway
 - Deploy OTLP collector / Tempo in `deploy/` when ops slice lands
 
 See [microservices.md](microservices.md) for CallUnary and retries; [tracing.md](tracing.md) for `wi-shared/infra/otel`.

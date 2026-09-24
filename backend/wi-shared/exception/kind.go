@@ -79,7 +79,7 @@ func GRPCCode(k Kind) codes.Code {
 	}
 }
 
-// KindFromGRPCCode maps a gRPC code to Kind for gateway HTTP translation.
+// KindFromGRPCCode maps a gRPC code to Kind for api-gateway HTTP translation.
 func KindFromGRPCCode(c codes.Code) Kind {
 	switch c {
 	case codes.InvalidArgument:

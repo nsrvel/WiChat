@@ -6,18 +6,30 @@ package grpc
 import (
 	"context"
 	"runtime/debug"
+	"time"
 
 	"github.com/wichat/wichat/backend/wi-shared/infra/logger"
 	"github.com/wichat/wichat/backend/wi-shared/microservices"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 )
 
 // NewServer builds a gRPC server with request ID and panic recovery. Pass otel.GRPCServerOptions() via extra.
 func NewServer(log logger.Logger, extra ...grpc.ServerOption) *grpc.Server {
-	opts := make([]grpc.ServerOption, 0, len(extra)+1)
+	opts := make([]grpc.ServerOption, 0, len(extra)+3)
 	opts = append(opts, extra...)
+	opts = append(opts,
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			Time:    30 * time.Second,
+			Timeout: 5 * time.Second,
+		}),
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             10 * time.Second,
+			PermitWithoutStream: true,
+		}),
+	)
 	opts = append(opts, grpc.ChainUnaryInterceptor(
 		UnaryServerRequestID(),
 		recoveryUnary(log),

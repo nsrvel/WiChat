@@ -25,7 +25,15 @@ func Health(w http.ResponseWriter, _ *http.Request) {
 
 // Register mounts /health and /metrics on mux.
 func Register(mux *http.ServeMux, reg prometheus.Gatherer) {
+	RegisterWithReady(mux, reg)
+}
+
+// RegisterWithReady mounts /health, /ready (when checks are provided), and /metrics.
+func RegisterWithReady(mux *http.ServeMux, reg prometheus.Gatherer, readyChecks ...ReadyCheck) {
 	mux.HandleFunc("/health", Health)
+	if len(readyChecks) > 0 {
+		mux.HandleFunc("/ready", ReadyHandler(readyChecks...))
+	}
 	mux.Handle("/metrics", metrics.Handler(reg))
 }
 
@@ -35,10 +43,10 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer builds an ops listener (microservices: metrics_addr).
-func NewHTTPServer(addr string, reg prometheus.Gatherer) *HTTPServer {
+func NewHTTPServer(addr string, reg prometheus.Gatherer, readyChecks ...ReadyCheck) *HTTPServer {
 	// Routes
 	mux := http.NewServeMux()
-	Register(mux, reg)
+	RegisterWithReady(mux, reg, readyChecks...)
 
 	// Server
 	return &HTTPServer{

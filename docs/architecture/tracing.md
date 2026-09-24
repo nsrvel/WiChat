@@ -7,7 +7,7 @@ Process-wide tracing lives in **`backend/wi-shared/infra/otel`** — separate fr
 Call once from each service `main`:
 
 ```go
-shutdown, err := otel.InstallTracer(context.Background(), "gateway")
+shutdown, err := otel.InstallTracer(context.Background(), "api-gateway")
 defer func() { _ = shutdown(context.Background()) }()
 ```
 
@@ -29,7 +29,7 @@ Spans use W3C trace context propagation via the global text map propagator set i
 
 ## Follow-up
 
-- `otelhttp` middleware on the gateway HTTP stack
+- `otelhttp` middleware on the api-gateway HTTP stack
 - OTLP collector / Tempo in `deploy/`
 
 See also [logging.md](logging.md) for request ID correlation (complements traces, not a replacement).

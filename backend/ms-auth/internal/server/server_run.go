@@ -12,60 +12,54 @@ import (
 	"time"
 
 	"github.com/wichat/wichat/backend/wi-shared/infra/ops"
-	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
-const grpcShutdownTimeout = 5 * time.Second
+const serveShutdownTimeout = 5 * time.Second
 
 func (s *server) Run(ctx context.Context) error {
 	// gRPC
 	lis, err := net.Listen("tcp", s.cfg.GRPCAddr)
 	if err != nil {
-		return fmt.Errorf("grpc listen %s: %w", s.cfg.GRPCAddr, err)
+		return fmt.Errorf("listen %s: %w", s.cfg.GRPCAddr, err)
 	}
 
 	grpcSrv := newGRPCServer(s.log)
-	s.registerGRPC(grpcSrv)
+	healthSrv := health.NewServer()
+	s.registerGRPC(grpcSrv, healthSrv)
 
-	// Ops HTTP
-	opsHTTP := ops.NewHTTPServer(s.cfg.MetricsAddr, s.reg)
+	// Ops + gRPC on one port
+	readyCheck := func(ctx context.Context) error {
+		resp, err := healthSrv.Check(ctx, &healthpb.HealthCheckRequest{Service: ""})
+		if err != nil {
+			return err
+		}
+		if resp.GetStatus() != healthpb.HealthCheckResponse_SERVING {
+			return fmt.Errorf("grpc health: %s", resp.GetStatus())
+		}
+		return nil
+	}
+	combined := ops.NewCombinedServer(grpcSrv, s.reg, readyCheck)
+
+	healthSrv.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
 
 	// Listen
-	errCh := make(chan error, 2)
-
+	errCh := make(chan error, 1)
 	go func() {
-		s.log.Info("grpc listening", "addr", s.cfg.GRPCAddr)
-		if err := grpcSrv.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
-			errCh <- fmt.Errorf("grpc serve: %w", err)
-		}
-	}()
-
-	go func() {
-		s.log.Info("ops http listening", "addr", s.cfg.MetricsAddr)
-		if err := opsHTTP.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			errCh <- fmt.Errorf("ops http serve: %w", err)
+		s.log.Info("listening", "addr", s.cfg.GRPCAddr, "grpc", true, "ops_http", true)
+		if err := combined.Serve(lis); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errCh <- fmt.Errorf("serve: %w", err)
 		}
 	}()
 
 	// Shutdown
 	shutdown := func() {
-		stopCtx, cancel := context.WithTimeout(context.Background(), grpcShutdownTimeout)
+		healthSrv.Shutdown()
+
+		stopCtx, cancel := context.WithTimeout(context.Background(), serveShutdownTimeout)
 		defer cancel()
-
-		stopped := make(chan struct{})
-		go func() {
-			grpcSrv.GracefulStop()
-			close(stopped)
-		}()
-		select {
-		case <-stopped:
-		case <-stopCtx.Done():
-			grpcSrv.Stop()
-		}
-
-		opsCtx, opsCancel := context.WithTimeout(context.Background(), ops.ShutdownTimeout)
-		defer opsCancel()
-		_ = opsHTTP.Shutdown(opsCtx)
+		_ = combined.Shutdown(stopCtx)
 	}
 
 	// Wait

@@ -7,7 +7,7 @@ import (
 	"context"
 )
 
-// RequestIDHeader is the HTTP header used for correlation across gateway and gRPC metadata.
+// RequestIDHeader is the HTTP header used for correlation across api-gateway and gRPC metadata.
 const RequestIDHeader = "X-Request-ID"
 
 type requestIDKey struct{}

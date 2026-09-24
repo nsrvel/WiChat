@@ -11,7 +11,7 @@ flowchart TB
 
     subgraph Edge["Core Backend — monorepo microservices (Go)"]
         direction TB
-        Gateway["gateway\nHTTP /api/v1, rate limit,\npresigned URLs, export trigger"]
+        Gateway["api-gateway\nHTTP /api/v1, rate limit,\npresigned URLs, export trigger"]
         Identity["identity\nauth, OAuth, sessions, guest tokens"]
         Platform["platform\nworkspaces, RBAC, channels metadata"]
         ChatSvc["chat\nmessages, WS, threads, moderation signals"]
@@ -62,7 +62,7 @@ flowchart TB
     Web --> MP
     MP -->|processed video track| LiveKit
     Web -->|REST, TLS| Gateway
-    Web -->|WebSocket via gateway| ChatSvc
+    Web -->|WebSocket via api-gateway| ChatSvc
     Web -->|connect/publish/subscribe| LiveKit
     Web -.direct upload (presigned).-> MinIO
     Desktop -.wraps.-> Web

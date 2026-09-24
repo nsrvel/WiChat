@@ -15,7 +15,7 @@ import (
 func (s *server) devAuthPing(w http.ResponseWriter, r *http.Request) {
 	ok, err := s.authClient.Ping(r.Context())
 	if err != nil {
-		responsehttp.WriteError(w, r, err, responsehttp.WithLogger(logger.HTTPWriteErrorLogger(s.log)))
+		responsehttp.WriteOutboundError(w, r, err, responsehttp.WithLogger(logger.HTTPWriteErrorLogger(s.log)))
 		return
 	}
 

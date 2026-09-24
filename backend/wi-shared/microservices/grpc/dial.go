@@ -5,9 +5,11 @@ package grpc
 
 import (
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 )
 
 // DialOptions configures a shared outbound gRPC connection.
@@ -25,8 +27,13 @@ func Dial(target string, opts DialOptions, extra ...grpc.DialOption) (*grpc.Clie
 		return nil, fmt.Errorf("microservices/grpc: dial target is empty")
 	}
 
-	dialOpts := make([]grpc.DialOption, 0, len(extra)+2)
+	dialOpts := make([]grpc.DialOption, 0, len(extra)+4)
 	dialOpts = append(dialOpts, extra...)
+	dialOpts = append(dialOpts, grpc.WithKeepaliveParams(keepalive.ClientParameters{
+		Time:                30 * time.Second,
+		Timeout:             5 * time.Second,
+		PermitWithoutStream: true,
+	}))
 	dialOpts = append(dialOpts, grpc.WithChainUnaryInterceptor(UnaryClientRequestID()))
 	if opts.Insecure {
 		dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))

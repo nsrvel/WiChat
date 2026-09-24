@@ -1,47 +1,8 @@
-services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: wichat
-      POSTGRES_PASSWORD: wichat
-      POSTGRES_DB: wichat
-    ports:
-      - "5432:5432"
-    volumes:
-      - wichat-postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wichat -d wichat"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+# Dev all-in-one: same stack as running each file under compose/ separately with -p wichat.
+name: wichat
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  prometheus:
-    image: prom/prometheus:v3.2.1
-    ports:
-      - "9091:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-  grafana:
-    image: grafana/grafana-oss:11.5.2
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-    depends_on:
-      - prometheus
-
-volumes:
-  wichat-postgres:
+include:
+  - path: compose/postgres.yml
+  - path: compose/redis.yml
+  - path: compose/prometheus.yml
+  - path: compose/grafana.yml

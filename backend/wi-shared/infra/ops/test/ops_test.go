@@ -4,6 +4,7 @@
 package ops_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -22,6 +23,41 @@ func TestHealth(t *testing.T) {
 	}
 	if !strings.Contains(rec.Body.String(), `"status":"ok"`) {
 		t.Fatalf("body %s", rec.Body.String())
+	}
+}
+
+func TestReadyOK(t *testing.T) {
+	rec := httptest.NewRecorder()
+	ops.ReadyHandler(func(ctx context.Context) error { return nil })(
+		rec, httptest.NewRequest(http.MethodGet, "/ready", nil),
+	)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+}
+
+func TestReadyFails(t *testing.T) {
+	rec := httptest.NewRecorder()
+	ops.ReadyHandler(func(ctx context.Context) error { return context.DeadlineExceeded })(
+		rec, httptest.NewRequest(http.MethodGet, "/ready", nil),
+	)
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"status":"not_ready"`) {
+		t.Fatalf("body %s", rec.Body.String())
+	}
+}
+
+func TestRegisterWithReadyRoute(t *testing.T) {
+	mux := http.NewServeMux()
+	reg := prometheus.NewRegistry()
+	ops.RegisterWithReady(mux, reg, func(ctx context.Context) error { return nil })
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/ready", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("ready status %d", rec.Code)
 	}
 }
 

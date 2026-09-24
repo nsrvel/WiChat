@@ -8,8 +8,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	authclient "github.com/wichat/wichat/backend/gateway/internal/client/auth"
-	"github.com/wichat/wichat/backend/gateway/internal/config"
+	authclient "github.com/wichat/wichat/backend/api-gateway/internal/client/auth"
+	"github.com/wichat/wichat/backend/api-gateway/internal/config"
 	"github.com/wichat/wichat/backend/wi-shared/infra/logger"
 )
 
@@ -25,7 +25,7 @@ type server struct {
 	authClient *authclient.Client
 }
 
-// NewServer constructs the gateway composition root.
+// NewServer constructs the api-gateway composition root.
 func NewServer(cfg config.Config, log logger.Logger, reg *prometheus.Registry) Server {
 	return &server{cfg: cfg, log: log, reg: reg}
 }

@@ -20,6 +20,12 @@ func CallUnary(ctx context.Context, cfg CallConfig, log logger.Logger, method st
 		return fmt.Errorf("microservices: invalid call timeouts")
 	}
 
+	if cfg.Breaker != nil {
+		if err := cfg.Breaker.BeforeCall(); err != nil {
+			return err
+		}
+	}
+
 	overallCtx, cancelOverall := context.WithTimeout(ctx, cfg.OverallTimeout)
 	defer cancelOverall()
 
@@ -30,9 +36,15 @@ func CallUnary(ctx context.Context, cfg CallConfig, log logger.Logger, method st
 		cancelAttempt()
 
 		if lastErr == nil {
+			if cfg.Breaker != nil {
+				cfg.Breaker.Record(nil)
+			}
 			return nil
 		}
 		if !shouldRetry(cfg.RetryPolicy, lastErr, attempt, cfg.MaxRetries) {
+			if cfg.Breaker != nil {
+				cfg.Breaker.Record(lastErr)
+			}
 			return lastErr
 		}
 
@@ -63,5 +75,8 @@ func CallUnary(ctx context.Context, cfg CallConfig, log logger.Logger, method st
 		}
 	}
 
+	if cfg.Breaker != nil {
+		cfg.Breaker.Record(lastErr)
+	}
 	return lastErr
 }

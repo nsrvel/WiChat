@@ -8,7 +8,7 @@ import (
 	"github.com/wichat/wichat/backend/wi-shared/microservices"
 )
 
-// Config is gateway service configuration.
+// Config is api-gateway service configuration.
 type Config struct {
 	Env           string                 `mapstructure:"env"`
 	LogLevel      string                 `mapstructure:"log_level"`
@@ -21,8 +21,8 @@ type Config struct {
 var Defaults = Config{
 	Env:           "development",
 	LogLevel:      "info",
-	HTTPAddr:      ":8080",
-	AuthGRPCAddr:  "localhost:50051",
+	HTTPAddr:      ":3000",
+	AuthGRPCAddr:  "localhost:3001",
 	Microservices: microservices.DefaultSettings,
 }
 

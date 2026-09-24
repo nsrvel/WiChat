@@ -28,7 +28,8 @@ wi-shared/exception/
 ## Formatting and lint
 
 - Format with **gofumpt** and **goimports** (via `golangci-lint fmt`); each module has its own `.golangci.yml` (e.g. `backend/ms-auth/.golangci.yml`).
-- Before opening a PR: `cd backend/<module> && make check` (e.g. `ms-auth`, `gateway`, `wi-shared`).
+- Before opening a PR: `cd backend/<module> && make check` (e.g. `ms-auth`, `api-gateway`, `wi-shared`).
+- Local dev: `cd backend && make dev-ms-auth` / `make dev-api-gateway` (Air), or `make run-*` without reload; see `backend/Makefile`.
 - gRPC contracts: edit `backend/wi-shared/models/**.proto`; run `make proto` from `wi-shared/`; never hand-edit `models/gen/`.
 - In `Run(ctx)` and server goroutines: return errors to `main` — no `log.Fatalf` in listeners.
 
@@ -38,5 +39,5 @@ wi-shared/exception/
 - Shared errors/responses: `wi-shared/exception`, `wi-shared/response` — see `docs/architecture/error-handling.md`.
 - Layer layout (repository / service / delivery): `wichat-go-layers.mdc`.
 - Step comments, banners, spacing: `wichat-go-style.mdc`.
-- HTTP RED metrics: `wi-shared/infra/metrics.NewHTTPMetrics` + `Middleware` on gateway when it exists — see `docs/architecture/metrics.md`.
+- HTTP RED metrics: `wi-shared/infra/metrics.NewHTTPMetrics` + `Middleware` on api-gateway — see `docs/architecture/metrics.md`.
 - Inter-service calls: `wi-shared/microservices` (+ `microservices/grpc` for Go gRPC); tracing bootstrap: `wi-shared/infra/otel` — see `docs/architecture/microservices.md` and `tracing.md`.

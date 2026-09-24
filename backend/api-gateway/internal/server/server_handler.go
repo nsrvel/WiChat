@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/wichat/wichat/backend/gateway/internal/middleware"
+	"github.com/wichat/wichat/backend/api-gateway/internal/middleware"
 	"github.com/wichat/wichat/backend/wi-shared/infra/metrics"
 	"github.com/wichat/wichat/backend/wi-shared/infra/ops"
 )
@@ -23,7 +23,7 @@ func (s *server) buildHandler() (http.Handler, error) {
 
 	// HTTP metrics
 	httpMetrics, err := metrics.NewHTTPMetrics(metrics.HTTPOptions{
-		Service:  "gateway",
+		Service:  "api-gateway",
 		Registry: s.reg,
 	})
 	if err != nil {
@@ -35,7 +35,11 @@ func (s *server) buildHandler() (http.Handler, error) {
 
 func (s *server) mapHandlers(mux *http.ServeMux) {
 	// Ops
-	ops.Register(mux, s.reg)
+	var readyChecks []ops.ReadyCheck
+	if s.authClient != nil {
+		readyChecks = append(readyChecks, s.authClient.ReadyCheck)
+	}
+	ops.RegisterWithReady(mux, s.reg, readyChecks...)
 
 	// APIs
 	// Auth routes register here when internal/auth/delivery/http exists.
@@ -51,6 +55,6 @@ func (s *server) mapHandlers(mux *http.ServeMux) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]string{"service": "gateway"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"service": "api-gateway"})
 	})
 }

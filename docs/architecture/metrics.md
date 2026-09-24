@@ -1,6 +1,6 @@
 # Metrics (Prometheus)
 
-WiChat **microservices** expose metrics on a dedicated **ops HTTP port** (`wi-shared/infra/ops`, ms-auth `metrics_addr`). The **gateway** serves the same routes on public HTTP (`http_addr`).
+WiChat **microservices** expose ops HTTP (`wi-shared/infra/ops`): **ms-auth** shares `/health`, `/ready`, `/metrics` with gRPC on `grpc_addr` (`:3001`). **api-gateway** serves the same routes on public `http_addr`.
 
 ## Stack
 
@@ -16,19 +16,24 @@ Logs use [logging.md](logging.md) (slog → Loki later); metrics are a separate 
 
 | Path | Purpose |
 |------|---------|
-| `GET /health` | Liveness JSON `{"status":"ok"}` |
+| `GET /health` | **Liveness** — process up; always `{"status":"ok"}` |
+| `GET /ready` | **Readiness** — can serve traffic; `503` + `{"status":"not_ready"}` when checks fail |
 | `GET /metrics` | Prometheus text exposition |
 
-Configure per service, e.g. ms-auth `metrics_addr` (default `:9090`). In production prefer loopback or an internal bind (e.g. `127.0.0.1:9090`) and firewall the port. `ops.NewHTTPServer` sets read/write timeouts.
+**api-gateway** (`:3000`): `/health` is liveness-only; `/ready` pings ms-auth (short timeout).
 
-Use `ops.Register(mux, reg)` to mount `/health` and `/metrics` on an existing mux (gateway), or `ops.NewHTTPServer(addr, reg)` for a separate listener (gRPC microservices).
+**ms-auth** (`:3001`): gRPC and ops HTTP on one listener (`ops.NewCombinedServer`); `/ready` reflects `grpc.health.v1`.
 
-## RED HTTP metrics (gateway and HTTP services)
+In production, bind `grpc_addr` to loopback or an internal interface and firewall the port. `ops.NewHTTPServer` is for a separate ops-only listener when a service needs it.
+
+Use `ops.RegisterWithReady(mux, reg, checks...)` on a mux, or `ops.NewCombinedServer` to share a port with gRPC.
+
+## RED HTTP metrics (api-gateway and HTTP services)
 
 Create metrics once at startup:
 
 ```go
-httpMetrics, err := metrics.NewHTTPMetrics(metrics.HTTPOptions{Service: "gateway", Registry: reg})
+httpMetrics, err := metrics.NewHTTPMetrics(metrics.HTTPOptions{Service: "api-gateway", Registry: reg})
 api := httpMetrics.Middleware(apiMux)
 ```
 
@@ -46,18 +51,18 @@ Records:
 - `metrics.NewRegistry()` in `main`
 - Ops HTTP: [wi-shared/infra/ops/ops.go](../../backend/wi-shared/infra/ops/ops.go)
 
-## gateway
+## api-gateway
 
 - `metrics.NewRegistry()` + `NewHTTPMetrics` middleware on the API mux
-- `/health` and `/metrics` on `http_addr` (default `:8080`)
-- Composition: [gateway/internal/server](../../backend/gateway/internal/server)
+- `/health` and `/metrics` on `http_addr` (default `:3000`)
+- Composition: [api-gateway/internal/server](../../backend/api-gateway/internal/server)
 
 ## Local observability
 
 1. Start infra: `docker compose -f deploy/docker-compose.yml up -d`
-2. Run ms-auth and gateway on the host (`:9090` admin, `:8080` gateway)
-3. Prometheus UI: http://localhost:9091/targets — jobs `ms-auth` and `gateway` should be **UP**
-4. Grafana: http://localhost:3000 (default login `admin` / `admin` on first setup) — Prometheus datasource pre-provisioned
+2. Run ms-auth and api-gateway on the host (`:3001` ms-auth, `:3000` api-gateway)
+3. Prometheus UI: http://localhost:9090/targets — jobs `ms-auth` and `api-gateway` should be **UP**
+4. Grafana: http://localhost:9000 (login `admin` / `admin` on first setup) — Prometheus datasource pre-provisioned
 
 On Linux, Prometheus service includes `extra_hosts` for `host.docker.internal`.
 

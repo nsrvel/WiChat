@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	authclient "github.com/wichat/wichat/backend/gateway/internal/client/auth"
+	authclient "github.com/wichat/wichat/backend/api-gateway/internal/client/auth"
 )
 
 const httpShutdownTimeout = 5 * time.Second

@@ -63,7 +63,7 @@ See [`architecture-context.mermaid`](architecture-context.mermaid) for the C4 Co
 
 | Service | Responsibility |
 |---------|----------------|
-| **gateway** | Public HTTP `/api/v1`, rate limits, JWT validation (via ms-auth), routes to gRPC backends, presigned URL issuance, export job trigger |
+| **api-gateway** | Public HTTP `/api/v1`, rate limits, JWT validation (via ms-auth), routes to gRPC backends, presigned URL issuance, export job trigger |
 | **ms-auth** | Auth, OAuth, email/password, sessions, refresh rotation, first-run admin, guest tokens (when enabled) |
 | **ms-user** | Workspaces, membership, RBAC, channels/categories/DM metadata, workspace settings, lobby/onboarding, user profiles |
 | **ms-chat** | Messages, threads, reactions, pins, typing, read receipts, WebSocket fanout, presence/activity status, chat-side moderation signals |
@@ -77,7 +77,7 @@ See [`architecture-context.mermaid`](architecture-context.mermaid) for the C4 Co
 
 **Shared code:** `backend/wi-shared/` for protobuf contracts (`models/`), shared error types, and small utilities only — **not** shared domain logic (avoid distributed monolith).
 
-**Clients:** live under `frontend/` (web first). Talk only to **gateway** (REST) and **ms-chat** (WebSocket via gateway or documented WS URL).
+**Clients:** live under `frontend/` (web first). Talk only to **api-gateway** (REST) and **ms-chat** (WebSocket via api-gateway or documented WS URL).
 
 ## 6. Core Domains
 
@@ -278,7 +278,7 @@ No offline-first support — mobile/web require an active connection. This is a 
 
 ## 14. Scale Assumptions
 
-Target: **2–500 people per workspace**. At this scale, a single instance each of PostgreSQL, Redis (optionally with Sentinel), Elasticsearch, and a single well-provisioned LiveKit node is sufficient — no sharding or clustering is required at launch. Core **microservices** scale horizontally only when metrics justify it (typically **chat** and **gateway** first); other services stay single-instance at this tier. Polyglot extraction (Python ML, etc.) remains possible via new services without redesigning domain boundaries.
+Target: **2–500 people per workspace**. At this scale, a single instance each of PostgreSQL, Redis (optionally with Sentinel), Elasticsearch, and a single well-provisioned LiveKit node is sufficient — no sharding or clustering is required at launch. Core **microservices** scale horizontally only when metrics justify it (typically **chat** and **api-gateway** first); other services stay single-instance at this tier. Polyglot extraction (Python ML, etc.) remains possible via new services without redesigning domain boundaries.
 
 **Workspaces per instance**: no fixed cap is set for v1. The real constraint is total concurrent load — particularly voice/video (LiveKit) and active WebSocket connections — not raw workspace count; Postgres/Redis/Elasticsearch handle many workspaces comfortably before that becomes a bottleneck. Grafana observability (already planned) is the intended signal for when scaling action is needed, rather than a number decided upfront.
 

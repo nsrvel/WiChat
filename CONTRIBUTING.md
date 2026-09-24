@@ -15,11 +15,11 @@ Thank you for helping make WiChat production-grade. This project is pre-implemen
 
 ## Development setup
 
-- **Go 1.26** (see `backend/go.work`). Each deployable module (`wi-shared`, `ms-auth`, `gateway`) is self-contained for a future split into separate repos.
+- **Go 1.26** (see `backend/go.work`). Each deployable module (`wi-shared`, `ms-auth`, `api-gateway`) is self-contained for a future split into separate repos.
 - Checks (monorepo orchestrator or per module):
 
 ```bash
-cd backend/ms-auth && make check      # fmt + lint + test (same for gateway, wi-shared)
+cd backend/ms-auth && make check      # fmt + lint + test (same for api-gateway, wi-shared)
 cd backend/wi-shared && make proto    # regenerate protobuf (requires buf)
 ```
 

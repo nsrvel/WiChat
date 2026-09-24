@@ -1,4 +1,4 @@
-module github.com/wichat/wichat/backend/gateway
+module github.com/wichat/wichat/backend/api-gateway
 
 go 1.26.0
 

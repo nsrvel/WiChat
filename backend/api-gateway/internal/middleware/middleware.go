@@ -13,7 +13,7 @@ import (
 	responsehttp "github.com/wichat/wichat/backend/wi-shared/response/http"
 )
 
-// Chain wraps the handler with gateway middleware (order: request ID, recover).
+// Chain wraps the handler with api-gateway middleware (order: request ID, recover).
 func Chain(next http.Handler) http.Handler {
 	return requestID(recoverPanic(next))
 }

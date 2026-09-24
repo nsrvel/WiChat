@@ -78,6 +78,20 @@ func TestWriteError4xxDoesNotLog(t *testing.T) {
 	}
 }
 
+func TestWriteOutboundErrorTransport(t *testing.T) {
+	rec := httptest.NewRecorder()
+	responsehttp.WriteOutboundError(rec, nil, errors.New("connection refused"))
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var body map[string]map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+	if body["error"]["code"] != string(exception.MsgUnavailable) {
+		t.Fatalf("code %v", body["error"]["code"])
+	}
+}
+
 func TestWriteErrorFromGRPCNotFound(t *testing.T) {
 	grpcErr := responsegrpc.ToStatus(exception.NotFound(exception.MsgUserNotFound, map[string]any{"user_id": "1"}))
 	rec := httptest.NewRecorder()

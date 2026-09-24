@@ -9,7 +9,7 @@ WiChat services use a shared error model in `backend/wi-shared`: semantic errors
 | Repository / infra | `error` (driver, I/O) | — |
 | Service / use case | `error` wrapping `*exception.Error` | — |
 | Microservice gRPC handler | — | `response/grpc.ToStatus(err)` |
-| Gateway HTTP handler | — | `response/http.WriteError` or `WriteErrorFromGRPC` |
+| Gateway HTTP handler | — | `WriteError` (domain), `WriteOutboundError` (downstream gRPC/transport), or `WriteErrorFromGRPC` |
 
 Clients resolve messages with i18n: `t(error.code, error.params)`.
 
@@ -47,7 +47,7 @@ Unknown or infrastructure errors returned without an `exception.Error` are treat
   - `Reason` = same code
   - `Metadata["params"]` = JSON object for interpolation
 
-Gateway uses `response/http.WriteErrorFromGRPC` to map gRPC → HTTP with the same JSON envelope.
+Gateway uses `response/http.WriteOutboundError` for outbound calls (gRPC status → HTTP, transport/unavailable → **503** `error.unavailable`) and `WriteErrorFromGRPC` when you already have a gRPC status error.
 
 ## Kind policy
 
