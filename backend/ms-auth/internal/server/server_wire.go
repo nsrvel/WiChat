@@ -3,9 +3,13 @@
 
 package server
 
-import "google.golang.org/grpc"
+import (
+	authgrpc "github.com/wichat/wichat/backend/ms-auth/internal/auth/delivery/grpc"
+	authv1 "github.com/wichat/wichat/backend/wi-shared/models/gen/auth/v1"
+	"google.golang.org/grpc"
+)
 
-func (s *server) registerGRPC(_ *grpc.Server) {
+func (s *server) registerGRPC(grpcSrv *grpc.Server) {
 	// Auth
-	// Handlers register here when internal/auth is implemented.
+	authv1.RegisterAuthServiceServer(grpcSrv, authgrpc.NewServer())
 }

@@ -11,7 +11,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/wichat/wichat/backend/wi-shared/ops"
+	"github.com/wichat/wichat/backend/wi-shared/infra/ops"
 )
 
 func TestHealth(t *testing.T) {

@@ -1,12 +1,12 @@
 # Metrics (Prometheus)
 
-WiChat **microservices** expose metrics on a dedicated **ops HTTP port** (`wi-shared/ops`, ms-auth `metrics_addr`). The **gateway** serves the same routes on public HTTP (`http_addr`).
+WiChat **microservices** expose metrics on a dedicated **ops HTTP port** (`wi-shared/infra/ops`, ms-auth `metrics_addr`). The **gateway** serves the same routes on public HTTP (`http_addr`).
 
 ## Stack
 
 | Component | Role |
 |-----------|------|
-| App (`wi-shared/metrics`) | `/metrics` handler, RED via `NewHTTPMetrics` + `Middleware` |
+| App (`wi-shared/infra/metrics`) | `/metrics` handler, RED via `NewHTTPMetrics` + `Middleware` |
 | Prometheus | Scrapes targets every 15s |
 | Grafana | Dashboards and exploration (datasource provisioned in `deploy/`) |
 
@@ -44,7 +44,7 @@ Records:
 ## ms-auth
 
 - `metrics.NewRegistry()` in `main`
-- Ops HTTP: [wi-shared/ops/ops.go](../../backend/wi-shared/ops/ops.go)
+- Ops HTTP: [wi-shared/infra/ops/ops.go](../../backend/wi-shared/infra/ops/ops.go)
 
 ## gateway
 

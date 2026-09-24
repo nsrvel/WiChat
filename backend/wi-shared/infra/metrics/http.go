@@ -135,17 +135,21 @@ func RoutePattern(r *http.Request) string {
 	if path == "" {
 		return "/"
 	}
+
 	segments := strings.Split(strings.Trim(path, "/"), "/")
 	if len(segments) > maxRouteSegments {
 		return "unknown"
 	}
+
 	for i, seg := range segments {
 		if seg == "" {
 			continue
 		}
+
 		if uuidLike.MatchString(seg) || numericID.MatchString(seg) {
 			segments[i] = "{id}"
 		}
 	}
+
 	return "/" + strings.Join(segments, "/")
 }

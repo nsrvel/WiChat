@@ -8,8 +8,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	authclient "github.com/wichat/wichat/backend/gateway/internal/client/auth"
 	"github.com/wichat/wichat/backend/gateway/internal/config"
-	"github.com/wichat/wichat/backend/wi-shared/logger"
+	"github.com/wichat/wichat/backend/wi-shared/infra/logger"
 )
 
 // Server runs the public HTTP API.
@@ -18,9 +19,10 @@ type Server interface {
 }
 
 type server struct {
-	cfg config.Config
-	log logger.Logger
-	reg *prometheus.Registry
+	cfg        config.Config
+	log        logger.Logger
+	reg        *prometheus.Registry
+	authClient *authclient.Client
 }
 
 // NewServer constructs the gateway composition root.

@@ -1,6 +1,6 @@
 # wi-shared
 
-Shared libraries for WiChat backend services (config, logger, metrics, errors, response writers, gRPC **models**).
+Shared libraries for WiChat backend services (config, **infra/** observability, errors, response writers, gRPC **models**).
 
 Protobuf contracts: [models/README.md](models/README.md) — `make proto` / `make buf-lint` in this module.
 

@@ -15,7 +15,7 @@ Readability goal: **open any file once and know its job** — same structural ha
 - **Dumb repository** — I/O only; plain `error`; no `exception` import.
 - **Interface at the boundary** — exported `Xxx` interface, unexported `xxx` struct, `NewXxx(...) Xxx`.
 - **Value receivers** on impl methods unless the receiver must mutate shared state (match suretyship default).
-- **Inject `logger.Logger`** (`wi-shared/logger`) in service, delivery, and repository when I/O errors matter.
+- **Inject `logger.Logger`** (`wi-shared/infra/logger`) in service, delivery, and repository when I/O errors matter.
 
 ## Folder layout (per domain)
 

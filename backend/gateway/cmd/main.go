@@ -12,8 +12,9 @@ import (
 
 	"github.com/wichat/wichat/backend/gateway/internal/config"
 	"github.com/wichat/wichat/backend/gateway/internal/server"
-	"github.com/wichat/wichat/backend/wi-shared/logger"
-	"github.com/wichat/wichat/backend/wi-shared/metrics"
+	"github.com/wichat/wichat/backend/wi-shared/infra/logger"
+	"github.com/wichat/wichat/backend/wi-shared/infra/metrics"
+	"github.com/wichat/wichat/backend/wi-shared/infra/otel"
 )
 
 func main() {
@@ -33,6 +34,14 @@ func main() {
 
 	// Metrics
 	reg := metrics.NewRegistry()
+
+	// Tracing
+	shutdownTracer, err := otel.InstallTracer(context.Background(), "gateway")
+	if err != nil {
+		appLog.Error("otel init failed", "err", err)
+		os.Exit(1)
+	}
+	defer func() { _ = shutdownTracer(context.Background()) }()
 
 	// Signals
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

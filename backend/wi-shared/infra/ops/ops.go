@@ -11,7 +11,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/wichat/wichat/backend/wi-shared/metrics"
+	"github.com/wichat/wichat/backend/wi-shared/infra/metrics"
 )
 
 // ShutdownTimeout is the default grace period for ops HTTP shutdown.

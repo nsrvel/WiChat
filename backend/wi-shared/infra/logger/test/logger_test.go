@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/wichat/wichat/backend/wi-shared/logger"
+	"github.com/wichat/wichat/backend/wi-shared/infra/logger"
 )
 
 func TestParseLevel(t *testing.T) {

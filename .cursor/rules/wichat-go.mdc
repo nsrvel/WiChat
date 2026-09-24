@@ -38,4 +38,5 @@ wi-shared/exception/
 - Shared errors/responses: `wi-shared/exception`, `wi-shared/response` — see `docs/architecture/error-handling.md`.
 - Layer layout (repository / service / delivery): `wichat-go-layers.mdc`.
 - Step comments, banners, spacing: `wichat-go-style.mdc`.
-- HTTP RED metrics: `wi-shared/metrics.NewHTTPMetrics` + `Middleware` on gateway when it exists — see `docs/architecture/metrics.md`.
+- HTTP RED metrics: `wi-shared/infra/metrics.NewHTTPMetrics` + `Middleware` on gateway when it exists — see `docs/architecture/metrics.md`.
+- Inter-service calls: `wi-shared/microservices` (+ `microservices/grpc` for Go gRPC); tracing bootstrap: `wi-shared/infra/otel` — see `docs/architecture/microservices.md` and `tracing.md`.

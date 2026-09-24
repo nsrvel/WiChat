@@ -9,7 +9,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/wichat/wichat/backend/ms-auth/internal/config"
-	"github.com/wichat/wichat/backend/wi-shared/logger"
+	"github.com/wichat/wichat/backend/wi-shared/infra/logger"
 )
 
 // Server runs ms-auth gRPC and ops HTTP (health/metrics).

@@ -86,4 +86,4 @@ Gateway `ParseStatus` rejects gRPC status messages that are not valid `MessageCo
 - `exception.Internal(cause)` → logs `cause`, client still gets `error.internal`
 - Expected 4xx exceptions are not logged by the writer
 
-Use `logger.HTTPWriteErrorLogger(appLog)` from `wi-shared/logger`. See [logging.md](logging.md).
+Use `logger.HTTPWriteErrorLogger(appLog)` from `wi-shared/infra/logger`. See [logging.md](logging.md).

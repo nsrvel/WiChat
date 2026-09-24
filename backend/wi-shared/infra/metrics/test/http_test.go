@@ -12,7 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 
-	"github.com/wichat/wichat/backend/wi-shared/metrics"
+	"github.com/wichat/wichat/backend/wi-shared/infra/metrics"
 )
 
 func TestRoutePatternNormalizesID(t *testing.T) {

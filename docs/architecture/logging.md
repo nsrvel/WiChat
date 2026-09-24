@@ -1,6 +1,6 @@
 # Application logging
 
-WiChat services use **`wi-shared/logger`** (`log/slog`) for structured application logs.
+WiChat services use **`wi-shared/infra/logger`** (`log/slog`) for structured application logs.
 
 ## Output
 
@@ -51,10 +51,14 @@ Client responses stay i18n codes only — see [error-handling.md](error-handling
 
 ## Gateway request ID
 
-`gateway/internal/middleware` sets `X-Request-ID` on every response (generated when the client omits it).
+`gateway/internal/middleware` sets `microservices.RequestIDHeader` (`X-Request-ID`) on every response and stores the value on `r.Context()` via `microservices.WithRequestID`.
 
-## Follow-up (not v1)
+Outbound gRPC from the gateway uses `wi-shared/microservices` client interceptors to send `x-request-id` metadata; ms-auth server interceptors read it back into context (recovery logs include `request_id` when present).
 
-- Propagate `request_id` into slog context and downstream gRPC metadata
-- gRPC unary interceptor for internal errors (ms-auth has recovery + internal log today)
-- Metrics (Prometheus) and tracing (OpenTelemetry) — separate slices
+## Follow-up
+
+- Add `request_id` to slog lines from context (automatic on every log call)
+- HTTP OpenTelemetry (`otelhttp`) on the gateway
+- Deploy OTLP collector / Tempo in `deploy/` when ops slice lands
+
+See [microservices.md](microservices.md) for CallUnary and retries; [tracing.md](tracing.md) for `wi-shared/infra/otel`.

@@ -6,10 +6,11 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/wichat/wichat/backend/gateway/internal/middleware"
-	"github.com/wichat/wichat/backend/wi-shared/metrics"
-	"github.com/wichat/wichat/backend/wi-shared/ops"
+	"github.com/wichat/wichat/backend/wi-shared/infra/metrics"
+	"github.com/wichat/wichat/backend/wi-shared/infra/ops"
 )
 
 func (s *server) buildHandler() (http.Handler, error) {
@@ -38,6 +39,9 @@ func (s *server) mapHandlers(mux *http.ServeMux) {
 
 	// APIs
 	// Auth routes register here when internal/auth/delivery/http exists.
+	if !strings.EqualFold(s.cfg.Env, "production") && s.authClient != nil {
+		mux.HandleFunc("GET /api/v1/dev/auth-ping", s.devAuthPing)
+	}
 
 	// Root
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

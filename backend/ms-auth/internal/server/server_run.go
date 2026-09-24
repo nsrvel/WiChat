@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/wichat/wichat/backend/wi-shared/ops"
+	"github.com/wichat/wichat/backend/wi-shared/infra/ops"
 	"google.golang.org/grpc"
 )
 

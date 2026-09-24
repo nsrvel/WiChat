@@ -9,10 +9,9 @@ import (
 	"net/http"
 
 	"github.com/wichat/wichat/backend/wi-shared/exception"
+	"github.com/wichat/wichat/backend/wi-shared/microservices"
 	responsehttp "github.com/wichat/wichat/backend/wi-shared/response/http"
 )
-
-const requestIDHeader = "X-Request-ID"
 
 // Chain wraps the handler with gateway middleware (order: request ID, recover).
 func Chain(next http.Handler) http.Handler {
@@ -22,12 +21,13 @@ func Chain(next http.Handler) http.Handler {
 // Request ID
 func requestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id := r.Header.Get(requestIDHeader)
+		id := r.Header.Get(microservices.RequestIDHeader)
 		if id == "" {
 			id = newRequestID()
 		}
 
-		w.Header().Set(requestIDHeader, id)
+		w.Header().Set(microservices.RequestIDHeader, id)
+		r = r.WithContext(microservices.WithRequestID(r.Context(), id))
 		next.ServeHTTP(w, r)
 	})
 }
