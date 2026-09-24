@@ -24,8 +24,10 @@ var Defaults = Config{
 // Load reads configuration from defaults, optional envFile, and environment.
 func Load(envFile string) (Config, error) {
 	var cfg Config
+
 	if err := sharedconfig.Load(envFile, &cfg, Defaults); err != nil {
 		return Config{}, err
 	}
+
 	return cfg, nil
 }

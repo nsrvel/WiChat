@@ -19,12 +19,14 @@ func Chain(next http.Handler) http.Handler {
 	return requestID(recoverPanic(next))
 }
 
+// Request ID
 func requestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := r.Header.Get(requestIDHeader)
 		if id == "" {
 			id = newRequestID()
 		}
+
 		w.Header().Set(requestIDHeader, id)
 		next.ServeHTTP(w, r)
 	})
@@ -33,9 +35,11 @@ func requestID(next http.Handler) http.Handler {
 func newRequestID() string {
 	var b [16]byte
 	_, _ = rand.Read(b[:])
+
 	return hex.EncodeToString(b[:])
 }
 
+// Recover panic
 func recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
@@ -43,6 +47,7 @@ func recoverPanic(next http.Handler) http.Handler {
 				responsehttp.WriteError(w, r, exception.Internal(nil))
 			}
 		}()
+
 		next.ServeHTTP(w, r)
 	})
 }

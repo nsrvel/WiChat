@@ -14,11 +14,13 @@ import (
 const httpShutdownTimeout = 5 * time.Second
 
 func (s *server) Run(ctx context.Context) error {
+	// Handler
 	handler, err := s.buildHandler()
 	if err != nil {
 		return err
 	}
 
+	// HTTP server
 	httpSrv := &http.Server{
 		Addr:              s.cfg.HTTPAddr,
 		Handler:           handler,
@@ -28,6 +30,7 @@ func (s *server) Run(ctx context.Context) error {
 		IdleTimeout:       60 * time.Second,
 	}
 
+	// Listen
 	errCh := make(chan error, 1)
 	go func() {
 		s.log.Info("http listening", "addr", s.cfg.HTTPAddr)
@@ -36,12 +39,14 @@ func (s *server) Run(ctx context.Context) error {
 		}
 	}()
 
+	// Shutdown
 	shutdown := func() {
 		stopCtx, cancel := context.WithTimeout(context.Background(), httpShutdownTimeout)
 		defer cancel()
 		_ = httpSrv.Shutdown(stopCtx)
 	}
 
+	// Wait
 	select {
 	case <-ctx.Done():
 		shutdown()

@@ -49,6 +49,6 @@ Only **always-on** rules for now (keep context lean). Add file-specific `.mdc` r
 | `wichat-core.mdc` | Product + architecture guardrails |
 | `wichat-go.mdc` | Go backend: tests under `<pkg>/test/`, per-module `make check`, wi-shared patterns |
 | `wichat-go-layers.mdc` | Go backend: repository / service / delivery layout |
-| `wichat-go-style.mdc` | Go backend: `//*` step comments, wiring banners, spacing |
+| `wichat-go-style.mdc` | Go backend: `//` step comments, wiring spacing |
 
 Detail standards: [system design](docs/architecture/wichat-system-design.md) and this file until narrower rules return.

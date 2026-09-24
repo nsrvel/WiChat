@@ -36,9 +36,11 @@ type HTTPServer struct {
 
 // NewHTTPServer builds an ops listener (microservices: metrics_addr).
 func NewHTTPServer(addr string, reg prometheus.Gatherer) *HTTPServer {
+	// Routes
 	mux := http.NewServeMux()
 	Register(mux, reg)
 
+	// Server
 	return &HTTPServer{
 		server: &http.Server{
 			Addr:              addr,

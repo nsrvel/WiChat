@@ -17,20 +17,24 @@ import (
 )
 
 func main() {
+	// Config
 	cfg, err := config.Load(".env")
 	if err != nil {
 		log.Printf("config: %v", err)
 		os.Exit(1)
 	}
 
+	// Logger
 	appLog := logger.New(logger.Options{
 		Service: "ms-auth",
 		Env:     cfg.Env,
 		Level:   cfg.LogLevel,
 	})
 
+	// Metrics
 	reg := metrics.NewRegistry()
 
+	// Signals
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -39,10 +43,12 @@ func main() {
 		"metrics_addr", cfg.MetricsAddr,
 	)
 
+	// Server
 	srv := server.NewServer(cfg, appLog, reg)
 	if err := srv.Run(ctx); err != nil {
 		appLog.Error("ms-auth stopped", "err", err)
 		os.Exit(1)
 	}
+
 	appLog.Info("ms-auth shutdown complete")
 }

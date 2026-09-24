@@ -6,9 +6,7 @@ alwaysApply: false
 
 # Go style (comments & spacing)
 
-Readability goal: code reads top-to-bottom like a **recipe** — same phases in the same order. Comments mark **phases**; blank lines separate them. Inspired by `references/be-suretyship/`, trimmed for WiChat.
-
-Layer architecture (repository / service / delivery): `wichat-go-layers.mdc`. Formatting: **gofumpt** via `wichat-go.mdc`.
+Readability goal: **ops-friendly scan** — DevOps/SRE and devs should see **what runs in which phase** from comments and blank lines alone. Match the rhythm of `references/be-suretyship/` (phases + spacing); step labels use plain `//` (see below). Layer rules: `wichat-go-layers.mdc`. Formatting: **gofumpt** via `wichat-go.mdc`.
 
 ## File naming
 
@@ -23,27 +21,33 @@ Layer architecture (repository / service / delivery): `wichat-go-layers.mdc`. Fo
 
 Do not copy suretyship `*_models.go` splits for tiny structs — split when the package actually grows.
 
-## Comment prefix
+## Comments (one prefix: `//`)
 
-- Use **`//* Step label`** only.
-- Do not use `//!`, `// =====` banners inside ordinary functions, or `//TODO` without an issue reference.
-- Step labels in **English** (`Validation`, not `Validasi`). User-facing copy is i18n `MessageCode`s in code, not comments.
+Do **not** use `//*`, `// *`, or `//!` — they confuse formatters, godoc, and staticcheck. Use normal `//` only.
 
-## Section banners (wiring files only)
+| Use | Form | Example |
+|-----|------|---------|
+| **Wiring step** (inside `main`, `Run`, handlers) | `// Label` on its own line before the block | `// Config`, `// Listen` |
+| **Exported API** (above type/func) | Godoc: `// SymbolName …` | `// Load reads …` |
+| **Inline note** | `// …` | rare |
 
-Use in:
+- Step labels in **English**. User-facing text stays i18n `MessageCode`s, not comments.
+- Replace placeholders like `// add comment` with a real step label (`// Request ID`); do not delete the comment line. No bare `//TODO` without an issue link.
+- Canonical wiring example: `backend/gateway/cmd/main.go`.
 
-- `cmd/main.go`
-- `internal/server/server_wire.go`, `server_handler.go` (composition / `mapHandlers`)
+## Section steps (bootstrap & wiring)
 
-Format:
+**Required** in:
+
+- `cmd/main.go` — Config → Logger → Metrics → Signals → (startup log) → Server → shutdown epilogue.
+- `internal/server/server_wire.go`, `server_handler.go`, `server_run.go`.
+- `wi-shared/config.Load` and other multi-phase loaders (~5+ distinct phases).
+
+**Format:**
 
 ```go
-//* ----- Config -----
+// Config
 ```
-
-- One blank line before each banner; one blank line after the banner before code.
-- Do not use full-width `================` lines.
 
 ## Step comments (by layer)
 
@@ -53,7 +57,7 @@ Format:
 | **delivery/grpc** | `Bind` (proto → model) → `Service` → `Response` |
 | **service** | `Validation` → `Repository` → extra domain steps only when needed (`Token`, `Session`, …) |
 | **repository** | No step recipe |
-| **wi-shared** (config, exception, response, metrics) | No step recipe |
+| **wi-shared** | No steps in tiny packages; use `//` phases in `config.Load` and similar multi-step wiring only |
 
 For **service** methods under ~15 lines, step headers are optional (delivery still uses Bind/Service/Response for consistency).
 
@@ -61,14 +65,20 @@ Extra service step names only when the method has **three or more** distinct pha
 
 ## Spacing
 
-- One blank line between step blocks (before the next `//*`).
-- No blank line immediately after `func (...) {` except in wiring files that open with a section banner.
-- No double blank lines inside a function.
+- `func main() {` opens with the first `//` step on the next line (no leading `log.Println`).
+- **One blank line** between step blocks; no blank line required immediately after `{`.
+- After the `// Server` block (`Run` returns), **one blank line** before `appLog.Info("… shutdown complete")`.
+- No double blank lines inside a single step.
 - Unrelated `const (` groups at file top: separate with one blank line.
+
+## Bootstrap logs (`cmd/main.go`)
+
+- **One** structured startup line: `appLog.Info("<service> starting", …)` after Signals, before `// Server`. No duplicate `log.Println("Starting …")`.
+- Before Logger exists, `log.Printf` / `os.Exit` for config errors only.
 
 ## What not to comment
 
-- The next function or method name (`//* Find user` above `FindUserByID`).
+- The next function or method name (`// Find user` above `FindUserByID`).
 - Obvious `return` / nil checks.
 - `wi-shared/models/gen/**` (generated; do not edit).
 
@@ -78,15 +88,30 @@ Extra service step names only when the method has **three or more** distinct pha
 
 ```go
 func main() {
-	//* ----- Config -----
+	// Config
 	cfg, err := config.Load(".env")
+	...
 
-	//* ----- Logger -----
-	appLog := logger.New(...)
+	// Logger
+	appLog := logger.New(logger.Options{...})
 
-	//* ----- Run -----
+	// Metrics
+	reg := metrics.NewRegistry()
+
+	// Signals
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	appLog.Info("gateway starting", "http_addr", cfg.HTTPAddr)
+
+	// Server
 	srv := server.NewServer(cfg, appLog, reg)
-	if err := srv.Run(ctx); err != nil { ... }
+	if err := srv.Run(ctx); err != nil {
+		appLog.Error("gateway stopped", "err", err)
+		os.Exit(1)
+	}
+
+	appLog.Info("gateway shutdown complete")
 }
 ```
 
@@ -94,12 +119,12 @@ func main() {
 
 ```go
 func (s service) Login(ctx context.Context, in *model.LoginInput) (*model.LoginResult, error) {
-	//* Validation
+	// Validation
 	if in.Email == "" {
 		return nil, exception.InvalidInput(...)
 	}
 
-	//* Repository
+	// Repository
 	u, err := s.users.FindByEmail(ctx, in.Email)
 	...
 }
@@ -108,12 +133,12 @@ func (s service) Login(ctx context.Context, in *model.LoginInput) (*model.LoginR
 ## Anti-patterns
 
 - Indonesian (or mixed) step labels
-- Section banners inside service or repository methods
-- Step comments in repository packages
+- `//*`, `// *`, or `//!` prefixes
+- Step banners inside repository packages (except multi-step loaders like `config.Load`)
 - `log.Fatalf` inside server listen goroutines — return errors to `Run(ctx)` (`wichat-go.mdc`)
 
 ## See also
 
 - `wichat-go-layers.mdc` — handlers, services, repositories
 - `wichat-go.mdc` — tests, lint, proto
-- `references/be-suretyship/` — historical reference, not copied verbatim
+- `references/be-suretyship/` — phase order and spacing (translate suretyship `//*` to WiChat `//` when porting)

@@ -86,12 +86,12 @@ func NewService(users repository.PgRepository, log logger.Logger) Service {
 }
 
 func (s service) Login(ctx context.Context, in *model.LoginInput) (*model.LoginResult, error) {
-    //* Validation
+    // Validation
     if in.Email == "" {
         return nil, exception.InvalidInput(exception.MsgInvalidInput, map[string]any{"field": "email"})
     }
 
-    //* Repository
+    // Repository
     u, err := s.users.FindByEmail(ctx, in.Email)
     if err != nil {
         if errors.Is(err, repository.ErrNotFound) {
@@ -100,14 +100,14 @@ func (s service) Login(ctx context.Context, in *model.LoginInput) (*model.LoginR
         return nil, err // raw infra → delivery/grpc → 500
     }
 
-    //* Domain logic ...
+    // Domain logic ...
     return &model.LoginResult{...}, nil
 }
 ```
 
 Checklist:
 
-- Step comments: `//* Validation`, `//* Repository`, `//* …` — same order in every method.
+- Step comments: `// Validation`, `// Repository`, … — same order in every method (`wichat-go-style.mdc`).
 - Return `exception.*` with **`MessageCode` consts** only (no hardcoded user-facing sentences).
 - Constants / magic values at top of file in `const` blocks.
 - Do not import `response/http` or `response/grpc` here.
@@ -131,21 +131,21 @@ func NewHandler(svc service.Service, log logger.Logger) Handler {
 }
 
 func (h handler) Login(w http.ResponseWriter, r *http.Request) {
-    //* Bind
+    // Bind
     var in model.LoginInput
     if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
         responsehttp.WriteError(w, r, exception.InvalidInput(exception.MsgInvalidInput, nil))
         return
     }
 
-    //* Service
+    // Service
     out, err := h.svc.Login(r.Context(), &in)
     if err != nil {
         responsehttp.WriteError(w, r, err, responsehttp.WithLogger(h.log))
         return
     }
 
-    //* Response
+    // Response
     responsehttp.WriteJSON(w, http.StatusOK, map[string]any{"data": out})
 }
 ```
@@ -156,20 +156,20 @@ Downstream gRPC errors: `responsehttp.WriteErrorFromGRPC(w, r, err, ...)`.
 
 ```go
 func (s *AuthServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
-    //* Bind (proto → model)
-    //* Service
+    // Bind (proto → model)
+    // Service
     out, err := s.svc.Login(ctx, toLoginInput(req))
     if err != nil {
         return nil, responsegrpc.ToStatus(err)
     }
-    //* Response
+    // Response
     return toLoginPB(out), nil
 }
 ```
 
 Checklist:
 
-- Same `//* Bind` / `//* Service` / `//* Response` steps.
+- Same `// Bind` / `// Service` / `// Response` steps.
 - Never `http.Error`, raw `status.Error` with driver text, or skip writers on errors.
 - Cookies, headers, proto mapping stay in delivery — not in service.
 

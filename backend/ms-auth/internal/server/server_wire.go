@@ -6,5 +6,6 @@ package server
 import "google.golang.org/grpc"
 
 func (s *server) registerGRPC(_ *grpc.Server) {
-	// Auth gRPC handlers register here when internal/auth is implemented.
+	// Auth
+	// Handlers register here when internal/auth is implemented.
 }

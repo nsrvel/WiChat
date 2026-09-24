@@ -18,6 +18,7 @@ import (
 const grpcShutdownTimeout = 5 * time.Second
 
 func (s *server) Run(ctx context.Context) error {
+	// gRPC
 	lis, err := net.Listen("tcp", s.cfg.GRPCAddr)
 	if err != nil {
 		return fmt.Errorf("grpc listen %s: %w", s.cfg.GRPCAddr, err)
@@ -25,8 +26,11 @@ func (s *server) Run(ctx context.Context) error {
 
 	grpcSrv := newGRPCServer(s.log)
 	s.registerGRPC(grpcSrv)
+
+	// Ops HTTP
 	opsHTTP := ops.NewHTTPServer(s.cfg.MetricsAddr, s.reg)
 
+	// Listen
 	errCh := make(chan error, 2)
 
 	go func() {
@@ -43,6 +47,7 @@ func (s *server) Run(ctx context.Context) error {
 		}
 	}()
 
+	// Shutdown
 	shutdown := func() {
 		stopCtx, cancel := context.WithTimeout(context.Background(), grpcShutdownTimeout)
 		defer cancel()
@@ -63,6 +68,7 @@ func (s *server) Run(ctx context.Context) error {
 		_ = opsHTTP.Shutdown(opsCtx)
 	}
 
+	// Wait
 	select {
 	case <-ctx.Done():
 		shutdown()

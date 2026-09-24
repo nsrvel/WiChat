@@ -18,6 +18,7 @@ import (
 // envFile empty skips file loading; a missing file is not an error.
 // defaults must be the same struct type as dst (value or pointer); env keys come from mapstructure tags.
 func Load(envFile string, dst, defaults any) error {
+	// Validation
 	if dst == nil {
 		return errors.New("config: dst is nil")
 	}
@@ -31,10 +32,13 @@ func Load(envFile string, dst, defaults any) error {
 	if err != nil {
 		return err
 	}
+
+	// Defaults
 	if err := applyDefaults(dstVal, defaultsVal); err != nil {
 		return err
 	}
 
+	// Viper
 	v := viper.New()
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
@@ -43,10 +47,12 @@ func Load(envFile string, dst, defaults any) error {
 		setViperDefaults(v, defaultsVal)
 	}
 
+	// Env file
 	if err := readEnvFile(v, envFile); err != nil {
 		return err
 	}
 
+	// Unmarshal
 	if err := v.Unmarshal(dst); err != nil {
 		return fmt.Errorf("config: unmarshal: %w", err)
 	}
