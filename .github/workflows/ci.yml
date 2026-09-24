@@ -32,19 +32,47 @@ jobs:
             exit 1
           fi
 
-  go-test:
-    name: Go tests
+  go-lint:
+    name: Go lint (${{ matrix.module }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [wi-shared, ms-auth, gateway]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
-      - name: Test Go workspace
-        working-directory: backend
-        run: |
-          if [ ! -f go.work ]; then
-            echo "backend/go.work not present; skipping Go tests until foundation is wired"
-            exit 0
-          fi
-          go test ./wi-shared/... ./ms-auth/...
+          go-version: "1.26"
+          cache-dependency-path: backend/${{ matrix.module }}/go.sum
+      - name: golangci-lint
+        working-directory: backend/${{ matrix.module }}
+        run: make lint
+
+  proto-lint:
+    name: Proto lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bufbuild/buf-action@v1
+      - name: buf lint
+        working-directory: backend/wi-shared
+        run: make buf-lint
+
+  go-test:
+    name: Go tests (${{ matrix.module }})
+    runs-on: ubuntu-latest
+    needs: [go-lint, proto-lint]
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [wi-shared, ms-auth, gateway]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: backend/${{ matrix.module }}/go.sum
+      - name: Test module
+        working-directory: backend/${{ matrix.module }}
+        run: make test

@@ -17,10 +17,11 @@ import (
 // Precedence (low to high): defaults struct, env file, environment variables.
 // envFile empty skips file loading; a missing file is not an error.
 // defaults must be the same struct type as dst (value or pointer); env keys come from mapstructure tags.
-func Load(envFile string, dst any, defaults any) error {
+func Load(envFile string, dst, defaults any) error {
 	if dst == nil {
 		return errors.New("config: dst is nil")
 	}
+
 	dstVal := reflect.ValueOf(dst)
 	if dstVal.Kind() != reflect.Pointer || dstVal.IsNil() {
 		return errors.New("config: dst must be a non-nil pointer")

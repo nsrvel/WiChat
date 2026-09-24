@@ -15,7 +15,19 @@ Thank you for helping make WiChat production-grade. This project is pre-implemen
 
 ## Development setup
 
-Documented as each phase lands (Phase 0: `docker compose`, Go toolchain, Node for clients). Until then, architecture docs are the source of truth.
+- **Go 1.26** (see `backend/go.work`). Each deployable module (`wi-shared`, `ms-auth`, `gateway`) is self-contained for a future split into separate repos.
+- Checks (monorepo orchestrator or per module):
+
+```bash
+cd backend/ms-auth && make check      # fmt + lint + test (same for gateway, wi-shared)
+cd backend/wi-shared && make proto    # regenerate protobuf (requires buf)
+```
+
+- Services depend on **wi-shared** (errors, config, and `models/gen` gRPC types). When repos split, use a tagged wi-shared module instead of `replace` in `go.mod`.
+
+- Optional editor: enable format on save with **gofumpt** (gopls `go.formatTool`).
+
+Infra: `docker compose -f deploy/docker-compose.yml up -d`. Architecture docs remain the source of truth for product behavior.
 
 ## Code standards
 

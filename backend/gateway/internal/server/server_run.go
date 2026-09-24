@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Garam
+
+package server
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net/http"
+	"time"
+)
+
+const httpShutdownTimeout = 5 * time.Second
+
+func (s *server) Run(ctx context.Context) error {
+	handler, err := s.buildHandler()
+	if err != nil {
+		return err
+	}
+
+	httpSrv := &http.Server{
+		Addr:              s.cfg.HTTPAddr,
+		Handler:           handler,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
+	errCh := make(chan error, 1)
+	go func() {
+		s.log.Info("http listening", "addr", s.cfg.HTTPAddr)
+		if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errCh <- fmt.Errorf("http serve: %w", err)
+		}
+	}()
+
+	shutdown := func() {
+		stopCtx, cancel := context.WithTimeout(context.Background(), httpShutdownTimeout)
+		defer cancel()
+		_ = httpSrv.Shutdown(stopCtx)
+	}
+
+	select {
+	case <-ctx.Done():
+		shutdown()
+		return nil
+	case err := <-errCh:
+		shutdown()
+		return err
+	}
+}

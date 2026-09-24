@@ -1,0 +1,119 @@
+---
+description: Go readability — step comments, section banners, spacing
+globs: backend/**/*.go
+alwaysApply: false
+---
+
+# Go style (comments & spacing)
+
+Readability goal: code reads top-to-bottom like a **recipe** — same phases in the same order. Comments mark **phases**; blank lines separate them. Inspired by `references/be-suretyship/`, trimmed for WiChat.
+
+Layer architecture (repository / service / delivery): `wichat-go-layers.mdc`. Formatting: **gofumpt** via `wichat-go.mdc`.
+
+## File naming
+
+| Rule | Example |
+|------|---------|
+| The **package name is the context** — avoid redundant suffixes | Bad: `config/config_models.go`. Good: `config/config.go` |
+| **One primary file** per small package | `config.go`, `logger.go`; split only when ~300+ lines or clear sub-concern (e.g. `repository/postgres_user.go`) |
+| **Split by concern** when still small | Good: `exception/code.go`, `kind.go`, `error.go` (~100 lines each); add `code_<domain>.go` for more `MessageCode`s |
+| **Subpackages by transport** | `response/response.go` (JSON envelope); `response/http/writer.go`; `response/grpc/status.go` — no extra `from_grpc.go` for a single helper |
+| Under `internal/server/`, prefer role names **without** repeating `server_` in the filename | Target: `run.go`, `wire.go` (rename when touched; not required in every slice) |
+| Tests in `<pkg>/test/` (`wichat-go.mdc`); test file may describe behavior | `load_test.go` is fine |
+
+Do not copy suretyship `*_models.go` splits for tiny structs — split when the package actually grows.
+
+## Comment prefix
+
+- Use **`//* Step label`** only.
+- Do not use `//!`, `// =====` banners inside ordinary functions, or `//TODO` without an issue reference.
+- Step labels in **English** (`Validation`, not `Validasi`). User-facing copy is i18n `MessageCode`s in code, not comments.
+
+## Section banners (wiring files only)
+
+Use in:
+
+- `cmd/main.go`
+- `internal/server/server_wire.go`, `server_handler.go` (composition / `mapHandlers`)
+
+Format:
+
+```go
+//* ----- Config -----
+```
+
+- One blank line before each banner; one blank line after the banner before code.
+- Do not use full-width `================` lines.
+
+## Step comments (by layer)
+
+| Layer | Steps (order) |
+|-------|----------------|
+| **delivery/http** | `Bind` → `Service` → `Response` |
+| **delivery/grpc** | `Bind` (proto → model) → `Service` → `Response` |
+| **service** | `Validation` → `Repository` → extra domain steps only when needed (`Token`, `Session`, …) |
+| **repository** | No step recipe |
+| **wi-shared** (config, exception, response, metrics) | No step recipe |
+
+For **service** methods under ~15 lines, step headers are optional (delivery still uses Bind/Service/Response for consistency).
+
+Extra service step names only when the method has **three or more** distinct phases — do not add filler labels.
+
+## Spacing
+
+- One blank line between step blocks (before the next `//*`).
+- No blank line immediately after `func (...) {` except in wiring files that open with a section banner.
+- No double blank lines inside a function.
+- Unrelated `const (` groups at file top: separate with one blank line.
+
+## What not to comment
+
+- The next function or method name (`//* Find user` above `FindUserByID`).
+- Obvious `return` / nil checks.
+- `wi-shared/models/gen/**` (generated; do not edit).
+
+## Examples
+
+**main / bootstrap:**
+
+```go
+func main() {
+	//* ----- Config -----
+	cfg, err := config.Load(".env")
+
+	//* ----- Logger -----
+	appLog := logger.New(...)
+
+	//* ----- Run -----
+	srv := server.NewServer(cfg, appLog, reg)
+	if err := srv.Run(ctx); err != nil { ... }
+}
+```
+
+**service:**
+
+```go
+func (s service) Login(ctx context.Context, in *model.LoginInput) (*model.LoginResult, error) {
+	//* Validation
+	if in.Email == "" {
+		return nil, exception.InvalidInput(...)
+	}
+
+	//* Repository
+	u, err := s.users.FindByEmail(ctx, in.Email)
+	...
+}
+```
+
+## Anti-patterns
+
+- Indonesian (or mixed) step labels
+- Section banners inside service or repository methods
+- Step comments in repository packages
+- `log.Fatalf` inside server listen goroutines — return errors to `Run(ctx)` (`wichat-go.mdc`)
+
+## See also
+
+- `wichat-go-layers.mdc` — handlers, services, repositories
+- `wichat-go.mdc` — tests, lint, proto
+- `references/be-suretyship/` — historical reference, not copied verbatim

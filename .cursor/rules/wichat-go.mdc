@@ -1,0 +1,41 @@
+---
+description: Go backend conventions (backend/, wi-shared, services)
+globs: backend/**/*.go
+alwaysApply: false
+---
+
+# Go (WiChat backend)
+
+## Tests live under `test/`
+
+Put test files in a **`test/` subdirectory** next to the code under test — not as `*_test.go` siblings in the production package folder.
+
+```text
+wi-shared/exception/
+  kind.go
+  error.go
+  test/
+    error_test.go
+    kind_test.go
+```
+
+- Test package name: **`{pkgname}_test`** (e.g. `exception_test` for `exception/`).
+- Import the module under test; tests are **black-box** (exported API only).
+- Run: `go test ./...` from the module root (includes `.../test` packages).
+
+**Exception:** tiny white-box tests for unexported helpers — only when unavoidable; keep in `test/` still, or document why a single in-package file is required.
+
+## Formatting and lint
+
+- Format with **gofumpt** and **goimports** (via `golangci-lint fmt`); each module has its own `.golangci.yml` (e.g. `backend/ms-auth/.golangci.yml`).
+- Before opening a PR: `cd backend/<module> && make check` (e.g. `ms-auth`, `gateway`, `wi-shared`).
+- gRPC contracts: edit `backend/wi-shared/models/**.proto`; run `make proto` from `wi-shared/`; never hand-edit `models/gen/`.
+- In `Run(ctx)` and server goroutines: return errors to `main` — no `log.Fatalf` in listeners.
+
+## Other
+
+- Match existing AGPL file headers on new `.go` files.
+- Shared errors/responses: `wi-shared/exception`, `wi-shared/response` — see `docs/architecture/error-handling.md`.
+- Layer layout (repository / service / delivery): `wichat-go-layers.mdc`.
+- Step comments, banners, spacing: `wichat-go-style.mdc`.
+- HTTP RED metrics: `wi-shared/metrics.NewHTTPMetrics` + `Middleware` on gateway when it exists — see `docs/architecture/metrics.md`.

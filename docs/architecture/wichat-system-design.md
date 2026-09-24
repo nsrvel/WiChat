@@ -75,7 +75,7 @@ See [`architecture-context.mermaid`](architecture-context.mermaid) for the C4 Co
 
 **Data ownership:** One **PostgreSQL cluster** at launch; each service owns its **tables** (no cross-service SQL joins — use IDs + gRPC/events). Shared DB is a pragmatic compromise; split databases only if ops requires it later.
 
-**Shared code:** `backend/pkg/` for protobuf contracts, shared error types, and small utilities only — **not** shared domain logic (avoid distributed monolith).
+**Shared code:** `backend/wi-shared/` for protobuf contracts (`models/`), shared error types, and small utilities only — **not** shared domain logic (avoid distributed monolith).
 
 **Clients:** live under `frontend/` (web first). Talk only to **gateway** (REST) and **ms-chat** (WebSocket via gateway or documented WS URL).
 
@@ -225,7 +225,7 @@ Two separate mechanisms, serving different needs:
 
 ## 10. Observability & Testing
 
-- **Observability**: Grafana + Loki for metrics/logs (matches the team's existing tooling experience)
+- **Observability**: Prometheus metrics (admin `/metrics`) + Grafana; application logs via slog → Loki (see [metrics.md](metrics.md), [logging.md](logging.md))
 - **Testing**:
   - Unit tests: Go `testing` + `testify`, ~90% coverage target
   - Integration tests: testcontainers (real Postgres/Redis in CI)
@@ -267,7 +267,7 @@ No offline-first support — mobile/web require an active connection. This is a 
 - Migrations: `golang-migrate`
 - i18n: backend emits message codes/keys only, never raw text; frontend resolves via translation files (i18next for web/Electron, go-i18n for backend-generated text like emails); ICU-style interpolation for dynamic values
 - Dark mode is a day-one requirement; a shared design-token system underlies web/desktop/mobile for visual consistency
-- **Error handling**: standard HTTP status codes + a human-readable error message string; no custom machine-readable error code taxonomy for v1 (kept simple deliberately, can be added later if frontend error-handling needs grow)
+- **Error handling**: standard HTTP status codes + JSON body `{ "error": { "code": "<i18n_key>", "params": { ... } } }` — backend emits translation keys only; see [error-handling.md](error-handling.md)
 - **Sessions**: JWT access token (15 min expiry) + refresh token (30 days, httpOnly cookie, rotated on every use — the old refresh token is invalidated as soon as a new one is issued)
 - **Message & upload limits** (workspace-configurable, defaults below):
   - Message length: 4,000 characters

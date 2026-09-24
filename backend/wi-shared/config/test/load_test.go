@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Garam
 
-package config
+package config_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/wichat/wichat/backend/wi-shared/config"
 )
 
 type testConfig struct {
@@ -21,7 +23,7 @@ var testDefaults = testConfig{
 
 func TestLoad_defaults(t *testing.T) {
 	var cfg testConfig
-	if err := Load("", &cfg, testDefaults); err != nil {
+	if err := config.Load("", &cfg, testDefaults); err != nil {
 		t.Fatal(err)
 	}
 	if cfg.GRPCAddr != ":50051" || cfg.LogLevel != "info" {
@@ -33,7 +35,7 @@ func TestLoad_envOverridesDefault(t *testing.T) {
 	t.Setenv("GRPC_ADDR", ":59999")
 
 	var cfg testConfig
-	if err := Load("", &cfg, testDefaults); err != nil {
+	if err := config.Load("", &cfg, testDefaults); err != nil {
 		t.Fatal(err)
 	}
 	if cfg.GRPCAddr != ":59999" {
@@ -52,7 +54,7 @@ func TestLoad_envFile(t *testing.T) {
 	}
 
 	var cfg testConfig
-	if err := Load(path, &cfg, testDefaults); err != nil {
+	if err := config.Load(path, &cfg, testDefaults); err != nil {
 		t.Fatal(err)
 	}
 	if cfg.LogLevel != "debug" {
@@ -69,7 +71,7 @@ func TestLoad_envWinsOverEnvFile(t *testing.T) {
 	t.Setenv("GRPC_ADDR", ":50053")
 
 	var cfg testConfig
-	if err := Load(path, &cfg, testDefaults); err != nil {
+	if err := config.Load(path, &cfg, testDefaults); err != nil {
 		t.Fatal(err)
 	}
 	if cfg.GRPCAddr != ":50053" {
@@ -78,7 +80,7 @@ func TestLoad_envWinsOverEnvFile(t *testing.T) {
 }
 
 func TestLoad_nilDst(t *testing.T) {
-	err := Load("", nil, testDefaults)
+	err := config.Load("", nil, testDefaults)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -86,7 +88,7 @@ func TestLoad_nilDst(t *testing.T) {
 
 func TestLoad_missingEnvFileOK(t *testing.T) {
 	var cfg testConfig
-	if err := Load(".env-does-not-exist", &cfg, testDefaults); err != nil {
+	if err := config.Load(".env-does-not-exist", &cfg, testDefaults); err != nil {
 		t.Fatal(err)
 	}
 	if cfg.GRPCAddr != ":50051" {

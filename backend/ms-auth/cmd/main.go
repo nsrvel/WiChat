@@ -4,10 +4,16 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/wichat/wichat/backend/ms-auth/internal/config"
+	"github.com/wichat/wichat/backend/ms-auth/internal/server"
+	"github.com/wichat/wichat/backend/wi-shared/logger"
+	"github.com/wichat/wichat/backend/wi-shared/metrics"
 )
 
 func main() {
@@ -17,5 +23,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Printf("ms-auth ready env=%s log_level=%s grpc_addr=%s", cfg.Env, cfg.LogLevel, cfg.GRPCAddr)
+	appLog := logger.New(logger.Options{
+		Service: "ms-auth",
+		Env:     cfg.Env,
+		Level:   cfg.LogLevel,
+	})
+
+	reg := metrics.NewRegistry()
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	appLog.Info("ms-auth starting",
+		"grpc_addr", cfg.GRPCAddr,
+		"metrics_addr", cfg.MetricsAddr,
+	)
+
+	srv := server.NewServer(cfg, appLog, reg)
+	if err := srv.Run(ctx); err != nil {
+		appLog.Error("ms-auth stopped", "err", err)
+		os.Exit(1)
+	}
+	appLog.Info("ms-auth shutdown complete")
 }
