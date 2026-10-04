@@ -1,0 +1,6 @@
+packages:
+  - frontend/web-client
+
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver

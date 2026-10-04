@@ -29,6 +29,8 @@ cd backend/wi-shared && make proto    # regenerate protobuf (requires buf)
 
 - Optional editor: enable format on save with **gofumpt** (gopls `go.formatTool`).
 
+**Frontend (`frontend/web-client`):** Node **22+**, pnpm **10**. From repo root: `pnpm install` (workspace + Husky), then `cp frontend/web-client/.env.example frontend/web-client/.env.local`. Checks: `pnpm --filter web-client check` (Prettier, ESLint, `tsc`, production build). Pre-commit hooks format/lint staged web-client files via lint-staged.
+
 Infra: `docker compose -f deploy/docker-compose.yml up -d`. Architecture docs remain the source of truth for product behavior.
 
 ## Code standards

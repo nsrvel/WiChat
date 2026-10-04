@@ -20,6 +20,6 @@ lib/
 
 Agent rules: `.cursor/rules/wichat-web-layout.mdc`, `.cursor/rules/wichat-web-data.mdc`. Skill: `.cursor/skills/wichat-web-client/`.
 
-Env: copy `web-client/.env.example` → `web-client/.env.local`. Monorepo layout: [docs/architecture/monorepo-layout.md](../docs/architecture/monorepo-layout.md).
+Env: copy `web-client/.env.example` → `web-client/.env.local`. From repo root: `pnpm install` then `pnpm --filter web-client dev` (UI **8080**, API **3000**). Monorepo layout: [docs/architecture/monorepo-layout.md](../docs/architecture/monorepo-layout.md).
 
 Pattern reference (not runtime): `references/react-tanstack/`.

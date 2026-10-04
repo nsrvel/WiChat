@@ -25,7 +25,9 @@ One git repository; **clear boundaries** so env, build artifacts, and docs do no
 | `backend/ms-auth/`, `ms-user/` | `.env.example` | Service `PORT`, future `DATABASE_URL` / `REDIS_URL` when wired |
 | `frontend/web-client/` | `.env.example` | `NEXT_PUBLIC_API_URL` (and other `NEXT_PUBLIC_*` only) |
 
-**Local dev:** from the module directory, `cp .env.example .env`. Services load `.env` from **their cwd** (`config.Load(".env")` in `cmd/main.go`). Never commit `.env`.
+**Local dev:** from the module directory, `cp .env.example .env` (Go) or `.env.local` (Next.js). Never commit `.env`.
+
+**Frontend workspace:** repo root `pnpm install` (pnpm workspace + Husky). Quality: `pnpm --filter web-client check`. Pre-commit: lint-staged on `frontend/web-client/**` only.
 
 **Infra URLs** (Postgres/Redis defaults): documented in [deploy/README.md](../../deploy/README.md), not duplicated as a second root env file.
 
