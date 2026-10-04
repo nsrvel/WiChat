@@ -3,7 +3,8 @@
 Public HTTP API.
 
 ```bash
-make dev    # Air live reload (start ms-auth first)
+cp .env.example .env   # optional overrides
+make dev    # Air live reload (start ms-auth for gateway /ready)
 make run    # single run
 make check  # fmt, lint, test
 ```

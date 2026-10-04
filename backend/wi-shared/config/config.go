@@ -57,6 +57,8 @@ func Load(envFile string, dst, defaults any) error {
 		return fmt.Errorf("config: unmarshal: %w", err)
 	}
 
+	applyExplicitConfig(v, dstVal.Elem(), defaultsVal)
+
 	return nil
 }
 

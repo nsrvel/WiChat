@@ -11,14 +11,14 @@ import (
 type Config struct {
 	Env      string `mapstructure:"env"`
 	LogLevel string `mapstructure:"log_level"`
-	GRPCAddr string `mapstructure:"grpc_addr"` // gRPC + ops HTTP (/health, /ready, /metrics) on one port
+	Port     string `mapstructure:"port"` // listen: gRPC + ops HTTP (/health, /ready, /metrics)
 }
 
 // Defaults are applied when env / .env do not set a value.
 var Defaults = Config{
 	Env:      "development",
 	LogLevel: "info",
-	GRPCAddr: ":3001",
+	Port:     "3001",
 }
 
 // Load reads configuration from defaults, optional envFile, and environment.
@@ -30,4 +30,9 @@ func Load(envFile string) (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// ListenAddr returns the address for net.Listen (e.g. ":3001").
+func (c Config) ListenAddr() string {
+	return sharedconfig.ListenAddress(c.Port)
 }

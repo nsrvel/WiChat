@@ -1,0 +1,11 @@
+# web-client — Next.js / Node (local config: .env.example → .env)
+.env
+.env.local
+.env.*.local
+
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+.vercel

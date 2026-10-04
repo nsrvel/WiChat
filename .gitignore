@@ -1,10 +1,13 @@
+# WiChat monorepo — global ignores (module-specific: see each tree's .gitignore)
+
 # Local reference clones (not part of WiChat)
 references/
 
-# Secrets & local config
+# Secrets & local config (templates: **/.env.example only)
 .env
 .env.*
 !.env.example
+
 *.pem
 *.key
 credentials.json
@@ -22,7 +25,7 @@ Thumbs.db
 !.vscode/extensions.json
 !.vscode/settings.json.example
 
-# Go
+# Go (shared; modules also list tmp/coverage locally)
 /bin/
 /dist/
 **/tmp/
@@ -38,7 +41,7 @@ coverage.out
 coverage.html
 /vendor/
 
-# Node / JS
+# Node / JS (web-client/.gitignore is canonical for the app)
 node_modules/
 .next/
 out/
@@ -52,7 +55,7 @@ yarn-error.log*
 pnpm-debug.log*
 .eslintcache
 
-# React Native / Mobile
+# React Native / Mobile (future)
 android/app/build/
 android/.gradle/
 ios/Pods/

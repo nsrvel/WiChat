@@ -15,15 +15,17 @@ Thank you for helping make WiChat production-grade. This project is pre-implemen
 
 ## Development setup
 
-- **Go 1.26** (see `backend/go.work`). Each deployable module (`wi-shared`, `ms-auth`, `api-gateway`) is self-contained for a future split into separate repos.
+- **Go 1.26** (see `backend/go.work`). Each deployable module (`wi-shared`, `ms-auth`, `ms-user`, `api-gateway`) is self-contained for a future split into separate repos.
 - Checks (monorepo orchestrator or per module):
 
 ```bash
-cd backend/ms-auth && make check      # fmt + lint + test (same for api-gateway, wi-shared)
+cd backend/ms-auth && make check      # fmt + lint + test (same for ms-user, api-gateway, wi-shared)
 cd backend/wi-shared && make proto    # regenerate protobuf (requires buf)
 ```
 
 - Services depend on **wi-shared** (errors, config, and `models/gen` gRPC types). When repos split, use a tagged wi-shared module instead of `replace` in `go.mod`.
+
+- **Environment:** no root `.env.example`. Use `deploy/.env.example` for Compose overrides; copy `backend/<service>/.env.example` → `.env` inside that service; `frontend/web-client/.env.example` → `.env.local` for Next.js. Details: [docs/architecture/monorepo-layout.md](docs/architecture/monorepo-layout.md).
 
 - Optional editor: enable format on save with **gofumpt** (gopls `go.formatTool`).
 

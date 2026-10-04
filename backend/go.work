@@ -3,5 +3,6 @@ go 1.26.0
 use (
 	./api-gateway
 	./ms-auth
+	./ms-user
 	./wi-shared
 )

@@ -34,18 +34,14 @@ func (s *server) buildHandler() (http.Handler, error) {
 }
 
 func (s *server) mapHandlers(mux *http.ServeMux) {
-	// Ops
 	var readyChecks []ops.ReadyCheck
-	if s.authClient != nil {
-		readyChecks = append(readyChecks, s.authClient.ReadyCheck)
+	if host := strings.TrimSpace(s.cfg.AuthHost); host != "" {
+		readyChecks = append(readyChecks, ops.HTTPGetReadyCheck(nil, ops.ServiceReadyURL(host)))
 	}
 	ops.RegisterWithReady(mux, s.reg, readyChecks...)
 
 	// APIs
 	// Auth routes register here when internal/auth/delivery/http exists.
-	if !strings.EqualFold(s.cfg.Env, "production") && s.authClient != nil {
-		mux.HandleFunc("GET /api/v1/dev/auth-ping", s.devAuthPing)
-	}
 
 	// Root
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

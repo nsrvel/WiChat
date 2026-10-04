@@ -47,7 +47,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	appLog.Info("ms-auth starting", "addr", cfg.GRPCAddr)
+	appLog.Info("ms-auth starting", "addr", cfg.ListenAddr())
 
 	// Server
 	srv := server.NewServer(cfg, appLog, reg)

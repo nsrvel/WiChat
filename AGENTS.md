@@ -20,10 +20,12 @@ WiChat is a **self-hosted**, **AGPL-3.0** team communication platform with a **p
 
 ```
 backend/       # Go: services/, pkg/, plugins/ (plugin servers)
-frontend/      # Web (Next.js first); desktop/mobile later
+frontend/      # web-client (Next.js)
 deploy/        # docker compose, env templates
 docs/          # architecture & ops
 ```
+
+Monorepo boundaries: [docs/architecture/monorepo-layout.md](docs/architecture/monorepo-layout.md).
 
 Phases in system design §15 — implement in order unless explicitly reprioritized.
 
@@ -41,7 +43,7 @@ License: [LICENSE](LICENSE). Preserve AGPL headers on new source files. Do not a
 
 ## Cursor rules
 
-Only **always-on** rules for now (keep context lean). Add file-specific `.mdc` rules when that code exists (Go, web, deploy, etc.).
+**Always-on:** program + core. **File-scoped:** Go and web when touching those paths.
 
 | Rule | Scope |
 |------|--------|
@@ -50,5 +52,9 @@ Only **always-on** rules for now (keep context lean). Add file-specific `.mdc` r
 | `wichat-go.mdc` | Go backend: tests under `<pkg>/test/`, per-module `make check`, wi-shared patterns |
 | `wichat-go-layers.mdc` | Go backend: repository / service / delivery layout |
 | `wichat-go-style.mdc` | Go backend: `//` step comments, wiring spacing |
+| `wichat-web-layout.mdc` | `frontend/web-client/**` — app vs features, components, no micro-FE |
+| `wichat-web-data.mdc` | `frontend/web-client/**` — api-client, Zod, TanStack Query services, WS vs Query |
 
-Detail standards: [system design](docs/architecture/wichat-system-design.md) and this file until narrower rules return.
+**Skill:** `.cursor/skills/wichat-web-client/` — scaffold and feature slices for web-client.
+
+Detail standards: [system design](docs/architecture/wichat-system-design.md) and this file.

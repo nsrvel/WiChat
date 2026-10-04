@@ -59,17 +59,18 @@ Postgres data volume: `wichat_wichat-postgres` (Compose prefixes volume names wi
 | Grafana | **9000** | Host maps to container **3000** |
 | api-gateway | **3000** | `/health`, `/ready`, `/metrics` on public HTTP |
 | ms-auth | **3001** | gRPC + `/health`, `/ready`, `/metrics` on one port |
+| ms-user | **3002** | gRPC + `/health`, `/ready`, `/metrics` on one port |
 
 ### Metrics (Prometheus + Grafana)
 
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:9000
 
-Scrape config expects **ms-auth** metrics on **3001** and **api-gateway** on **3000** (`host.docker.internal`). Run both binaries locally, then check Prometheus → Status → Targets.
+Scrape config expects **ms-auth** on **3001**, **ms-user** on **3002**, and **api-gateway** on **3000** (`host.docker.internal`). Run binaries locally, then check Prometheus → Status → Targets.
 
 See [docs/architecture/metrics.md](../docs/architecture/metrics.md).
 
-Instance env vars: see `.env.example` at repo root. WiChat services are added to compose as each slice lands.
+Instance env: [`deploy/.env.example`](.env.example) (Compose overrides). Go services: each module’s `backend/<service>/.env.example`. See [docs/architecture/monorepo-layout.md](../docs/architecture/monorepo-layout.md).
 
 See `docs/architecture/wichat-system-design.md` §7 and §11.
 

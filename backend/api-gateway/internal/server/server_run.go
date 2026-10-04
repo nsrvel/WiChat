@@ -9,30 +9,20 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
-	authclient "github.com/wichat/wichat/backend/api-gateway/internal/client/auth"
 )
 
 const httpShutdownTimeout = 5 * time.Second
 
 func (s *server) Run(ctx context.Context) error {
-	// Clients
-	authClient, err := authclient.New(s.cfg.AuthGRPCAddr, s.log, s.cfg.Microservices)
-	if err != nil {
-		return err
-	}
-	s.authClient = authClient
-
 	// Handler
 	handler, err := s.buildHandler()
 	if err != nil {
-		_ = authClient.Close()
 		return err
 	}
 
 	// HTTP server
 	httpSrv := &http.Server{
-		Addr:              s.cfg.HTTPAddr,
+		Addr:              s.cfg.HTTPListenAddr(),
 		Handler:           handler,
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
@@ -43,7 +33,7 @@ func (s *server) Run(ctx context.Context) error {
 	// Listen
 	errCh := make(chan error, 1)
 	go func() {
-		s.log.Info("http listening", "addr", s.cfg.HTTPAddr)
+		s.log.Info("http listening", "addr", s.cfg.HTTPListenAddr())
 		if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- fmt.Errorf("http serve: %w", err)
 		}
@@ -54,9 +44,6 @@ func (s *server) Run(ctx context.Context) error {
 		stopCtx, cancel := context.WithTimeout(context.Background(), httpShutdownTimeout)
 		defer cancel()
 		_ = httpSrv.Shutdown(stopCtx)
-		if s.authClient != nil {
-			_ = s.authClient.Close()
-		}
 	}
 
 	// Wait

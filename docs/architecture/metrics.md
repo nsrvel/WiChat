@@ -1,6 +1,6 @@
 # Metrics (Prometheus)
 
-WiChat **microservices** expose ops HTTP (`wi-shared/infra/ops`): **ms-auth** shares `/health`, `/ready`, `/metrics` with gRPC on `grpc_addr` (`:3001`). **api-gateway** serves the same routes on public `http_addr`.
+WiChat **microservices** expose ops HTTP (`wi-shared/infra/ops`): **ms-auth** (`PORT`, default `3001`) and **ms-user** (`PORT`, default `3002`) share `/health`, `/ready`, `/metrics` with gRPC on the same listen address. **api-gateway** serves the same routes on public HTTP (`PORT`, default `3000`).
 
 ## Stack
 
@@ -20,11 +20,11 @@ Logs use [logging.md](logging.md) (slog → Loki later); metrics are a separate 
 | `GET /ready` | **Readiness** — can serve traffic; `503` + `{"status":"not_ready"}` when checks fail |
 | `GET /metrics` | Prometheus text exposition |
 
-**api-gateway** (`:3000`): `/health` is liveness-only; `/ready` pings ms-auth (short timeout).
+**api-gateway** (`PORT=3000`): `/health` is liveness-only; `/ready` HTTP-probes ms-auth `/ready` (short timeout).
 
-**ms-auth** (`:3001`): gRPC and ops HTTP on one listener (`ops.NewCombinedServer`); `/ready` reflects `grpc.health.v1`.
+**ms-auth** (`:3001`) and **ms-user** (`:3002`): gRPC and ops HTTP on one listener (`ops.NewCombinedServer`); `/ready` reflects `grpc.health.v1`.
 
-In production, bind `grpc_addr` to loopback or an internal interface and firewall the port. `ops.NewHTTPServer` is for a separate ops-only listener when a service needs it.
+In production, bind `MS_*_HOST` to loopback or an internal interface and firewall the port. `ops.NewHTTPServer` is for a separate ops-only listener when a service needs it.
 
 Use `ops.RegisterWithReady(mux, reg, checks...)` on a mux, or `ops.NewCombinedServer` to share a port with gRPC.
 
@@ -54,13 +54,13 @@ Records:
 ## api-gateway
 
 - `metrics.NewRegistry()` + `NewHTTPMetrics` middleware on the API mux
-- `/health` and `/metrics` on `http_addr` (default `:3000`)
+- `/health` and `/metrics` on listen addr from `PORT` (default `3000`)
 - Composition: [api-gateway/internal/server](../../backend/api-gateway/internal/server)
 
 ## Local observability
 
 1. Start infra: `docker compose -f deploy/docker-compose.yml up -d`
-2. Run ms-auth and api-gateway on the host (`:3001` ms-auth, `:3000` api-gateway)
+2. Run services on the host (`:3001` ms-auth, `:3002` ms-user, `:3000` api-gateway)
 3. Prometheus UI: http://localhost:9090/targets — jobs `ms-auth` and `api-gateway` should be **UP**
 4. Grafana: http://localhost:9000 (login `admin` / `admin` on first setup) — Prometheus datasource pre-provisioned
 

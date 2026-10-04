@@ -1,0 +1,58 @@
+# Monorepo layout & ownership
+
+One git repository; **clear boundaries** so env, build artifacts, and docs do not mix between deploy, backend modules, and frontend.
+
+## Top-level map
+
+| Path | Owns | Does not own |
+|------|------|----------------|
+| `deploy/` | Docker Compose, infra ports, optional compose env | Go service config, app secrets in repo root |
+| `backend/wi-shared/` | Shared Go libs, protobuf contracts | Runnable `.env`, service ports |
+| `backend/api-gateway/` | Public HTTP, gateway `.env` | Postgres credentials (unless documented for local dev) |
+| `backend/ms-auth/`, `ms-user/` | Domain service config & `.env` | Frontend API URLs |
+| `frontend/web-client/` | Next.js, `NEXT_PUBLIC_*`, Node artifacts | Backend gRPC, DB URLs (except public API base URL) |
+| `docs/` | Product & architecture spec | Runtime config |
+| `references/` | Local clones for patterns (gitignored) | Shipped product code |
+
+## Environment files
+
+**Rule:** no aggregate `.env.example` at repo root. Each **runnable** unit documents its own variables.
+
+| Location | File | Purpose |
+|----------|------|---------|
+| `deploy/` | `.env.example` | Optional Compose overrides (infra); connection hints for local dev |
+| `backend/api-gateway/` | `.env.example` | `PORT`, `MS_*_HOST`, log level |
+| `backend/ms-auth/`, `ms-user/` | `.env.example` | Service `PORT`, future `DATABASE_URL` / `REDIS_URL` when wired |
+| `frontend/web-client/` | `.env.example` | `NEXT_PUBLIC_API_URL` (and other `NEXT_PUBLIC_*` only) |
+
+**Local dev:** from the module directory, `cp .env.example .env`. Services load `.env` from **their cwd** (`config.Load(".env")` in `cmd/main.go`). Never commit `.env`.
+
+**Infra URLs** (Postgres/Redis defaults): documented in [deploy/README.md](../../deploy/README.md), not duplicated as a second root env file.
+
+## `.gitignore` ladder
+
+Git merges ignore rules from root downward.
+
+1. **Root `.gitignore`** — repo-wide: `references/`, OS/editors, all `.env` files, `!.env.example`, generic Go/Node/mobile patterns.
+2. **`backend/.gitignore`** — Air `tmp/`, workspace-wide backend noise.
+3. **Per module** (`api-gateway/`, `ms-auth/`, `ms-user/`, `wi-shared/`, `frontend/web-client/`) — short file stating **this module’s** local overrides and build dirs (even when root already covers them, for on-call clarity).
+
+Do not put service-specific secrets or `node_modules` policy only in root without a module stub when that module exists.
+
+## CI & PR scope
+
+- Backend change → `cd backend/<module> && make check` (see [CONTRIBUTING.md](../../CONTRIBUTING.md)).
+- Frontend change → lint/test in `frontend/web-client/` when present.
+- Compose/metrics → `deploy/` + `docs/architecture/metrics.md`.
+
+Keep PRs **one concern** to reduce merge noise (see `wichat-program.mdc`).
+
+## Future split (optional)
+
+Go modules are already separate under `backend/go.work`. Extracting to multiple git repos later means tagged **`wi-shared`** modules and copied deploy docs — not required for MVP.
+
+## See also
+
+- [wichat-system-design.md](wichat-system-design.md) §5.1 (services)
+- [frontend/README.md](../../frontend/README.md) (web-client)
+- `.cursor/rules/wichat-web-*.mdc` (frontend boundaries)

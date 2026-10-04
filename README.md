@@ -19,11 +19,13 @@ Target scale: **2–500 people per workspace** on a single instance (`docker com
 ## Repository layout
 
 ```
-backend/     # Go microservices + pkg (see backend/README.md)
-frontend/    # Web client (incremental; see frontend/README.md)
+backend/     # Go microservices + wi-shared (see backend/README.md)
+frontend/    # web-client (see frontend/README.md)
 deploy/      # Docker Compose & ops
 docs/        # Architecture & product spec
 ```
+
+Monorepo ownership (env, gitignore, modules): [docs/architecture/monorepo-layout.md](docs/architecture/monorepo-layout.md).
 
 ## Architecture (short)
 

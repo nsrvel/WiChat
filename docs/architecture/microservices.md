@@ -20,8 +20,8 @@ grpcSrv := msgrpc.NewServer(appLog, otel.GRPCServerOptions()...)
 
 | Check | api-gateway | gRPC microservices (e.g. ms-auth) |
 |-------|-------------|-----------------------------------|
-| Liveness | `GET /health` on `http_addr` | `GET /health` on `grpc_addr` (same port as gRPC) |
-| Readiness | `GET /ready` (deps, e.g. auth Ping) | `GET /ready` + `grpc.health.v1` on `grpc_addr` |
+| Liveness | `GET /health` on `PORT` | `GET /health` on `ms_*_host` listen addr (same port as gRPC) |
+| Readiness | `GET /ready` (deps, e.g. HTTP `GET` ms-auth `/ready`) | `GET /ready` + `grpc.health.v1` on listen addr |
 
 Use **liveness** for “restart the pod”; **readiness** for “send user traffic / register in load balancer”. Do not fail gateway liveness when a downstream is down.
 
@@ -31,9 +31,9 @@ Wrap generated stub calls (package `microservices`):
 
 ```go
 cfg := microservices.CallConfigFromSettings(settings, microservices.RetryIdempotent)
-err := microservices.CallUnary(ctx, cfg, log, authv1.AuthService_Ping_FullMethodName, func(callCtx context.Context) error {
-    out, err = client.Ping(callCtx, &authv1.PingRequest{})
-    return err
+// Example: domain RPC via CallUnary (when protos exist)
+err := microservices.CallUnary(ctx, cfg, log, someMethod, func(callCtx context.Context) error {
+    return stub.DoSomething(callCtx, req)
 })
 ```
 
@@ -53,7 +53,7 @@ Outbound gRPC uses a small **circuit breaker** on consecutive transport/`Unavail
 | Policy | Use |
 |--------|-----|
 | `RetryNone` | Creates/updates without idempotency key |
-| `RetryIdempotent` | Ping, Get*, safe reads |
+| `RetryIdempotent` | Get*, safe reads |
 | `RetrySafe` | Reserved for idempotency-key writes |
 
 No retry on gRPC codes such as `InvalidArgument`, `NotFound`, `PermissionDenied`. Retries `Unavailable`, `ResourceExhausted`, and transport-style failures (with faster retry on obvious disconnects).
@@ -70,6 +70,8 @@ ms-auth/internal/client/user/
 
 Map domain errors in the **service** layer (`exception`, `response/grpc`).
 
-## Gateway dev check
+## Ops HTTP health
 
-Non-production: `GET /api/v1/dev/auth-ping` calls `AuthService.Ping` on ms-auth (requires `auth_grpc_addr`, default `localhost:3001`).
+Liveness/readiness use **`wi-shared/infra/ops`**: `GET /health`, `GET /ready`, `GET /metrics` on each service listen port.
+
+**api-gateway** `/ready` may probe upstreams with `ops.HTTPGetReadyCheck` (e.g. `http://MS_AUTH_HOST/ready`). Microservices combine gRPC + ops on one port; `/ready` uses `grpc.health.v1` internally.

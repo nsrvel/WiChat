@@ -12,8 +12,9 @@ import (
 type Config struct {
 	Env           string                 `mapstructure:"env"`
 	LogLevel      string                 `mapstructure:"log_level"`
-	HTTPAddr      string                 `mapstructure:"http_addr"`
-	AuthGRPCAddr  string                 `mapstructure:"auth_grpc_addr"`
+	Port          string                 `mapstructure:"port"`
+	AuthHost      string                 `mapstructure:"ms_auth_host"`
+	UserHost      string                 `mapstructure:"ms_user_host"`
 	Microservices microservices.Settings `mapstructure:",squash"`
 }
 
@@ -21,8 +22,9 @@ type Config struct {
 var Defaults = Config{
 	Env:           "development",
 	LogLevel:      "info",
-	HTTPAddr:      ":3000",
-	AuthGRPCAddr:  "localhost:3001",
+	Port:          "3000",
+	AuthHost:      "localhost:3001",
+	UserHost:      "localhost:3002",
 	Microservices: microservices.DefaultSettings,
 }
 
@@ -35,4 +37,9 @@ func Load(envFile string) (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// HTTPListenAddr returns the address for net/http.Server (e.g. ":3000").
+func (c Config) HTTPListenAddr() string {
+	return sharedconfig.ListenAddress(c.Port)
 }

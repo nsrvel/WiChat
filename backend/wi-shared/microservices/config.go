@@ -11,7 +11,7 @@ type RetryPolicy int
 const (
 	// RetryNone never retries.
 	RetryNone RetryPolicy = 0
-	// RetryIdempotent retries transport/unavailable-class errors (reads, Ping, etc.).
+	// RetryIdempotent retries transport/unavailable-class errors (reads, Health, etc.).
 	RetryIdempotent RetryPolicy = 1
 	// RetrySafe reserved for idempotency-key writes; same retriable set as RetryIdempotent today.
 	RetrySafe RetryPolicy = 2

@@ -47,7 +47,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	appLog.Info("api-gateway starting", "http_addr", cfg.HTTPAddr)
+	appLog.Info("api-gateway starting", "port", cfg.Port)
 
 	// Server
 	srv := server.NewServer(cfg, appLog, reg)
